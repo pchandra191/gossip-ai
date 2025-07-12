@@ -14,21 +14,21 @@ export const Footer: React.FC = () => {
     ],
     resources: [
       { label: 'Documentation', href: '#docs' },
-      { label: 'API Guide', href: '#api-guide' },
-      { label: 'Tutorials', href: '#tutorials' },
+      { label: 'ChatGPT API Guide', href: '#api-guide' },
+      { label: 'Gemini API Guide', href: '#tutorials' },
       { label: 'FAQ', href: '#faq' }
     ],
     community: [
       { label: 'GitHub', href: 'https://github.com', icon: Github },
       { label: 'Twitter', href: 'https://twitter.com', icon: Twitter },
       { label: 'Discord', href: 'https://discord.com', icon: ExternalLink },
-      { label: 'Contact', href: 'mailto:hello@aigossip.com', icon: Mail }
+      { label: 'Contact', href: 'mailto:pchandra114@gmail.com', icon: Mail }
     ],
     legal: [
-      { label: 'Privacy Policy', href: '#privacy' },
+      { label: 'Privacy Policy', href: 'https://github.com/pchandra191/gossip-ai?tab=readme-ov-file#privacy--security' },
       { label: 'Terms of Service', href: '#terms' },
-      { label: 'Cookie Policy', href: '#cookies' },
-      { label: 'License', href: '#license' }
+      { label: 'Contributing', href: 'https://github.com/pchandra191/gossip-ai?tab=readme-ov-file#contributing' },
+      { label: 'License', href: 'https://opensource.org/license/mit' }
     ]
   };
 
@@ -42,6 +42,8 @@ export const Footer: React.FC = () => {
             <p className="mt-4 text-gray-600 dark:text-gray-400 max-w-md">
               Experience the future of AI conversations. Watch real AI models debate, 
               discuss, and explore ideas while you moderate and guide the discussion.
+              <br></br>
+              Developer:<b>Prabhat Chandra</b> 
             </p>
             <div className="mt-6 flex space-x-4">
               {footerLinks.community.map((link, index) => (
