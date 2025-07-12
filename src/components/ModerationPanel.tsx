@@ -101,6 +101,14 @@ export const ModerationPanel: React.FC<ModerationPanelProps> = ({
       {/* Playback Controls */}
       <div className="flex items-center justify-center space-x-4 mb-6">
         <button
+          onClick={() => onModerationAction({ type: 'continue' } as ModerationAction)}
+          disabled={!isActive || messageCount === 0}
+          className="p-3 rounded-full bg-blue-500 hover:bg-blue-600 text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Continue conversation"
+        >
+          <MessageSquare size={20} />
+        </button>
+        <button
           onClick={() => onModerationAction({ type: isActive ? 'pause' : 'resume' })}
           disabled={messageCount === 0}
           className={`p-3 rounded-full text-white transition-all duration-200 ${

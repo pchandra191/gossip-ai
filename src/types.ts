@@ -37,6 +37,6 @@ export interface AppSettings {
 }
 
 export interface ModerationAction {
-  type: 'refocus' | 'changeTopic' | 'summarize' | 'clarify' | 'pause' | 'resume';
+  type: 'refocus' | 'changeTopic' | 'summarize' | 'clarify' | 'pause' | 'resume' | 'continue';
   payload?: string;
 }

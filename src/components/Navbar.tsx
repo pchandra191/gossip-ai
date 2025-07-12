@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { MessageCircle, Settings, Info, Github, Menu, X, Sparkles } from 'lucide-react';
+import { Settings, Info, Github, Menu, X } from 'lucide-react';
+import { Logo } from './Logo';
 
 interface NavbarProps {
   onSettingsClick: () => void;
@@ -40,20 +41,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onSettingsClick, apiStatus }) =>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo and Brand */}
-          <div className="flex items-center space-x-3">
-            <div className="relative">
-              <MessageCircle size={32} className="text-indigo-600 dark:text-indigo-400" />
-              <Sparkles size={12} className="absolute -top-1 -right-1 text-yellow-500" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-800 dark:text-white">
-                AI Gossip
-              </h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400 hidden sm:block">
-                Where AIs talk, you run the show
-              </p>
-            </div>
-          </div>
+          <Logo size="sm" />
 
           {/* API Status */}
           <div className="hidden md:flex items-center space-x-4">

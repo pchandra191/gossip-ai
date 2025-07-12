@@ -6,6 +6,7 @@ import { TopicInput } from './components/TopicInput';
 import { ChatInterface } from './components/ChatInterface';
 import { ModerationPanel } from './components/ModerationPanel';
 import { SettingsPanel } from './components/SettingsPanel';
+import { Footer } from './components/Footer';
 import { generateAIResponse, validateApiKeys } from './services/aiService';
 import { generateMockAIResponse } from './utils/mockAI';
 import { Persona, Message, AppSettings, ModerationAction, Conversation } from './types';
@@ -115,6 +116,8 @@ function App() {
 
       // Follow up with second persona
       setTimeout(async () => {
+        if (!isConversationActive) return; // Check if still active
+        
         setIsLoading(true);
         
         const updatedHistory = [...conversationHistory, {
@@ -154,10 +157,10 @@ function App() {
         setIsLoading(false);
         
         // Continue conversation automatically if autoPlay is enabled
-        if (settings.autoPlay && isConversationActive) {
+        if (settings.autoPlay && isConversationActive && messages.length >= 2) {
           setTimeout(() => {
             continueConversation();
-          }, settings.responseDelay * 1000);
+          }, (settings.responseDelay + 1) * 1000);
         }
       }, settings.responseDelay * 1000);
     } catch (error) {
@@ -167,7 +170,7 @@ function App() {
   };
 
   const continueConversation = async () => {
-    if (!isConversationActive || !selectedPersonas[0] || !selectedPersonas[1] || messages.length === 0) return;
+    if (!isConversationActive || !selectedPersonas[0] || !selectedPersonas[1] || messages.length === 0 || isLoading) return;
     
     setIsLoading(true);
     
@@ -217,7 +220,7 @@ function App() {
       if (settings.autoPlay && isConversationActive) {
         setTimeout(() => {
           continueConversation();
-        }, settings.responseDelay * 1000);
+        }, (settings.responseDelay + Math.random() * 2) * 1000);
       }
     } catch (error) {
       setIsLoading(false);
@@ -227,6 +230,11 @@ function App() {
 
   const handleModerationAction = async (action: ModerationAction) => {
     switch (action.type) {
+      case 'continue':
+        if (isConversationActive && !isLoading) {
+          continueConversation();
+        }
+        break;
       case 'pause':
         setIsConversationActive(false);
         break;
@@ -382,6 +390,8 @@ function App() {
           </div>
         )}
       </div>
+      
+      <Footer />
     </div>
   );
 }
