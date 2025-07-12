@@ -117,7 +117,7 @@ const generateGeminiResponse = async (context: ConversationContext): Promise<str
   const { topic, conversationHistory, persona, isResponse, previousMessage } = context;
 
   const client = getGeminiClient();
-  const model = client.getGenerativeModel({ model: 'gemini-pro' });
+  const model = client.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   // Build conversation context for Gemini
   let prompt = `${persona.systemPrompt}\n\nYou are discussing the topic: "${topic}"\n\nThis is a conversation between two AI assistants. The user is moderating the discussion.\n\n`;
@@ -193,7 +193,7 @@ export const validateApiKeys = async () => {
   if (hasGemini) {
     try {
       const client = getGeminiClient();
-      const model = client.getGenerativeModel({ model: 'gemini-pro' });
+      const model = client.getGenerativeModel({ model: 'gemini-2.0-flash' });
       await model.generateContent('Hello');
       results.gemini = true;
     } catch (error) {
