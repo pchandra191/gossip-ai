@@ -6,7 +6,7 @@ interface PersonaSelectorProps {
   selectedPersonas: [Persona | null, Persona | null];
   onPersonaSelect: (persona: Persona, slot: 0 | 1) => void;
   disabled?: boolean;
-  apiStatus: { openai: boolean; hasAnyKey: boolean; error: string | null };
+  apiStatus: { openai: boolean; gemini: boolean; hasAnyKey: boolean; error: string | null };
 }
 
 export const PersonaSelector: React.FC<PersonaSelectorProps> = ({
@@ -23,7 +23,21 @@ export const PersonaSelector: React.FC<PersonaSelectorProps> = ({
     const otherSlot = slot === 0 ? 1 : 0;
     const otherPersona = selectedPersonas[otherSlot];
     
-    return personas.filter(persona => !otherPersona || persona.id !== otherPersona.id);
+    // Filter personas based on slot and API availability
+    const availablePersonas = personas.filter(persona => {
+      // Don't show if already selected in other slot
+      if (otherPersona && persona.id === otherPersona.id) return false;
+      
+      // For slot 0 (ChatGPT side), show OpenAI personas
+      if (slot === 0) return persona.model === 'openai';
+      
+      // For slot 1 (Gemini side), show Gemini personas
+      if (slot === 1) return persona.model === 'gemini';
+      
+      return true;
+    });
+    
+    return availablePersonas;
   };
 
   return (
@@ -38,10 +52,12 @@ export const PersonaSelector: React.FC<PersonaSelectorProps> = ({
             ⚠️ API Configuration Required
           </h3>
           <p className="text-xs text-yellow-700 dark:text-yellow-300">
-            To use real AI debates, configure your OpenAI API key in the .env file:
+            To use real AI debates, configure your API keys in the .env file:
           </p>
           <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-2 font-mono">
             VITE_OPENAI_API_KEY=your_openai_key
+            <br />
+            VITE_GEMINI_API_KEY=your_gemini_key
           </p>
           <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-2">
             Without an API key, the app will use mock responses for demonstration.
@@ -52,8 +68,11 @@ export const PersonaSelector: React.FC<PersonaSelectorProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Debater 1 */}
         <div className="space-y-4">
-          <div className="flex items-center justify-center p-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
-            <h3 className="text-xl font-semibold text-white">ChatGPT</h3>
+          <div className="flex items-center justify-center p-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg relative">
+            <h3 className="text-xl font-semibold text-white">OpenAI GPT-4</h3>
+            <div className={`absolute top-2 right-2 w-3 h-3 rounded-full ${
+              apiStatus.openai ? 'bg-green-400' : 'bg-red-400'
+            }`} title={apiStatus.openai ? 'Connected' : 'Not Connected'}></div>
           </div>
           
           {selectedPersonas[0] && (
@@ -104,8 +123,11 @@ export const PersonaSelector: React.FC<PersonaSelectorProps> = ({
 
         {/* Debater 2 */}
         <div className="space-y-4">
-          <div className="flex items-center justify-center p-4 bg-gradient-to-r from-green-500 to-teal-600 rounded-lg">
-            <h3 className="text-xl font-semibold text-white">Gemini</h3>
+          <div className="flex items-center justify-center p-4 bg-gradient-to-r from-green-500 to-teal-600 rounded-lg relative">
+            <h3 className="text-xl font-semibold text-white">Google Gemini</h3>
+            <div className={`absolute top-2 right-2 w-3 h-3 rounded-full ${
+              apiStatus.gemini ? 'bg-green-400' : 'bg-red-400'
+            }`} title={apiStatus.gemini ? 'Connected' : 'Not Connected'}></div>
           </div>
           
           {selectedPersonas[1] && (

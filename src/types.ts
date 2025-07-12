@@ -36,6 +36,13 @@ export interface AppSettings {
   responseDelay: number;
 }
 
+export interface ApiStatus {
+  openai: boolean;
+  gemini: boolean;
+  hasAnyKey: boolean;
+  error: string | null;
+}
+
 export interface ModerationAction {
   type: 'refocus' | 'changeTopic' | 'summarize' | 'clarify' | 'pause' | 'resume' | 'continue';
   payload?: string;

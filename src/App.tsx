@@ -9,7 +9,7 @@ import { SettingsPanel } from './components/SettingsPanel';
 import { Footer } from './components/Footer';
 import { generateAIResponse, validateApiKeys } from './services/aiService';
 import { generateMockAIResponse } from './utils/mockAI';
-import { Persona, Message, AppSettings, ModerationAction, Conversation } from './types';
+import { Persona, Message, AppSettings, ModerationAction, Conversation, ApiStatus } from './types';
 import { Share2, Download } from 'lucide-react';
 
 function App() {
@@ -21,7 +21,7 @@ function App() {
   const [isAppLoading, setIsAppLoading] = useState(true);
   const [isCheckingApi, setIsCheckingApi] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
-  const [apiStatus, setApiStatus] = useState({ openai: false, hasAnyKey: false, error: null });
+  const [apiStatus, setApiStatus] = useState<ApiStatus>({ openai: false, gemini: false, hasAnyKey: false, error: null });
   const [settings, setSettings] = useState<AppSettings>({
     darkMode: false,
     voiceEnabled: false,

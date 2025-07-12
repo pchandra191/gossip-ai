@@ -4,7 +4,7 @@ import { Logo } from './Logo';
 
 interface NavbarProps {
   onSettingsClick: () => void;
-  apiStatus: { openai: boolean; hasAnyKey: boolean; error: string | null };
+  apiStatus: { openai: boolean; gemini: boolean; hasAnyKey: boolean; error: string | null };
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ onSettingsClick, apiStatus }) => {
@@ -46,9 +46,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onSettingsClick, apiStatus }) =>
           {/* API Status */}
           <div className="hidden md:flex items-center space-x-4">
             <div className="flex items-center space-x-2 px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full">
-              <div className={`w-2 h-2 rounded-full ${
-                apiStatus.openai ? 'bg-green-500' : 'bg-red-500'
-              }`}></div>
+              <div className="flex space-x-1">
+                <div className={`w-2 h-2 rounded-full ${
+                  apiStatus.openai ? 'bg-green-500' : 'bg-red-500'
+                }`} title="OpenAI Status"></div>
+                <div className={`w-2 h-2 rounded-full ${
+                  apiStatus.gemini ? 'bg-green-500' : 'bg-red-500'
+                }`} title="Gemini Status"></div>
+              </div>
               <span className="text-sm text-gray-600 dark:text-gray-400">
                 {apiStatus.hasAnyKey ? 'API Connected' : 'Demo Mode'}
               </span>
@@ -86,9 +91,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onSettingsClick, apiStatus }) =>
           <div className="md:hidden border-t border-gray-200 dark:border-gray-700 py-4">
             {/* API Status Mobile */}
             <div className="flex items-center justify-center space-x-2 mb-4 px-3 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg mx-4">
-              <div className={`w-2 h-2 rounded-full ${
-                apiStatus.openai ? 'bg-green-500' : 'bg-red-500'
-              }`}></div>
+              <div className="flex space-x-1">
+                <div className={`w-2 h-2 rounded-full ${
+                  apiStatus.openai ? 'bg-green-500' : 'bg-red-500'
+                }`} title="OpenAI Status"></div>
+                <div className={`w-2 h-2 rounded-full ${
+                  apiStatus.gemini ? 'bg-green-500' : 'bg-red-500'
+                }`} title="Gemini Status"></div>
+              </div>
               <span className="text-sm text-gray-600 dark:text-gray-400">
                 {apiStatus.hasAnyKey ? 'API Connected' : 'Demo Mode'}
               </span>
