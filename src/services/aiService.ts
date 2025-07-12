@@ -1,11 +1,22 @@
 import OpenAI from 'openai';
 import { Persona } from '../types';
 
-// Initialize OpenAI
-const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-  dangerouslyAllowBrowser: true
-});
+// Initialize OpenAI client lazily
+let openai: OpenAI | null = null;
+
+const getOpenAIClient = (): OpenAI => {
+  if (!openai) {
+    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+    if (!apiKey || apiKey.trim() === '') {
+      throw new Error('OpenAI API key is not configured. Please add VITE_OPENAI_API_KEY to your .env file.');
+    }
+    openai = new OpenAI({
+      apiKey,
+      dangerouslyAllowBrowser: true
+    });
+  }
+  return openai;
+};
 
 interface ConversationContext {
   topic: string;
@@ -34,6 +45,8 @@ export const generateAIResponse = async (context: ConversationContext): Promise<
 
 const generateOpenAIResponse = async (context: ConversationContext): Promise<string> => {
   const { topic, conversationHistory, persona, isResponse, previousMessage } = context;
+
+  const client = getOpenAIClient();
 
   // Build conversation context
   const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
@@ -71,7 +84,7 @@ const generateOpenAIResponse = async (context: ConversationContext): Promise<str
     });
   }
 
-  const completion = await openai.chat.completions.create({
+  const completion = await client.chat.completions.create({
     model: 'gpt-4o-mini',
     messages,
     max_tokens: 150,
@@ -95,7 +108,8 @@ export const validateApiKeys = async () => {
 
   try {
     // Test the API key with a simple request
-    const testCompletion = await openai.chat.completions.create({
+    const client = getOpenAIClient();
+    const testCompletion = await client.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [{ role: 'user', content: 'Hello' }],
       max_tokens: 5,
