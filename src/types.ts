@@ -44,6 +44,6 @@ export interface ApiStatus {
 }
 
 export interface ModerationAction {
-  type: 'refocus' | 'changeTopic' | 'summarize' | 'clarify' | 'pause' | 'resume' | 'continue';
+  type: 'refocus' | 'changeTopic' | 'summarize' | 'clarify' | 'pause' | 'resume' | 'export';
   payload?: string;
 }

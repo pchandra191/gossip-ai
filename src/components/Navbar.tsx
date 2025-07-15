@@ -4,10 +4,11 @@ import { Logo } from './Logo';
 
 interface NavbarProps {
   onSettingsClick: () => void;
+  onAboutClick: () => void;
   apiStatus: { openai: boolean; gemini: boolean; hasAnyKey: boolean; error: string | null };
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onSettingsClick, apiStatus }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onSettingsClick, onAboutClick, apiStatus }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const menuItems = [
@@ -20,10 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onSettingsClick, apiStatus }) =>
     {
       label: 'About',
       icon: Info,
-      onClick: () => {
-        // Handle about modal
-        alert('AI Gossip v1.0 - Where AIs talk, and you run the show!');
-      },
+      onClick: onAboutClick,
       description: 'Learn more about AI Gossip'
     },
     {

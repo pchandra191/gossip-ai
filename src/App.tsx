@@ -21,13 +21,15 @@ function App() {
   const [isAppLoading, setIsAppLoading] = useState(true);
   const [isCheckingApi, setIsCheckingApi] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
+  const [nextResponder, setNextResponder] = useState<0 | 1 | null>(null);
   const [apiStatus, setApiStatus] = useState<ApiStatus>({ openai: false, gemini: false, hasAnyKey: false, error: null });
   const [settings, setSettings] = useState<AppSettings>({
     darkMode: false,
     voiceEnabled: false,
     animationsEnabled: true,
     toneMode: 'casual',
-    autoPlay: true,
+    autoPlay: false,
     responseDelay: 3
   });
 
@@ -77,6 +79,7 @@ function App() {
     setCurrentTopic(topic);
     setMessages([]);
     setIsConversationActive(true);
+    setNextResponder(0); // Start with first persona
     setIsLoading(true);
 
     // Start conversation with first persona
@@ -113,102 +116,49 @@ function App() {
 
       setMessages([firstMessage]);
       setIsLoading(false);
-
-      // Follow up with second persona
-      setTimeout(async () => {
-        // Don't check isConversationActive here as it might not be updated yet
-        
-        setIsLoading(true);
-        
-        const updatedHistory = [{
-          role: 'assistant' as const,
-          content: firstResponse,
-          persona: selectedPersonas[0]!.id
-        }];
-        
-        let secondResponse: string;
-        
-        if (apiStatus.hasAnyKey) {
-          secondResponse = await generateAIResponse({
-            topic,
-            conversationHistory: updatedHistory,
-            persona: selectedPersonas[1]!,
-            isResponse: true,
-            previousMessage: firstResponse
-          });
-        } else {
-          secondResponse = await generateMockAIResponse({
-            topic,
-            conversationHistory: updatedHistory,
-            persona: selectedPersonas[1]!,
-            isResponse: true,
-            previousMessage: firstResponse
-          });
-        }
-
-        const secondMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          personaId: selectedPersonas[1]!.id,
-          content: secondResponse,
-          timestamp: new Date()
-        };
-
-        setMessages(prev => {
-          const newMessages = [...prev, secondMessage];
-          
-          // Continue conversation automatically if autoPlay is enabled
-          if (settings.autoPlay) {
-            setTimeout(() => {
-              continueConversationWithHistory(newMessages);
-            }, (settings.responseDelay + 1) * 1000);
-          }
-          
-          return newMessages;
-        });
-        setIsLoading(false);
-      }, settings.responseDelay * 1000);
+      setNextResponder(1); // Next response should come from second persona
     } catch (error) {
       setIsLoading(false);
       console.error('Error generating AI response:', error);
     }
   };
 
-  const continueConversationWithHistory = async (currentMessages: Message[]) => {
-    if (!isConversationActive || !selectedPersonas[0] || !selectedPersonas[1] || currentMessages.length === 0 || isLoading) return;
+  const getNextResponse = async () => {
+    if (!isConversationActive || !selectedPersonas[0] || !selectedPersonas[1] || isLoading || nextResponder === null) return;
     
     setIsLoading(true);
     
     try {
-      // Determine which persona should respond next
-      const lastMessage = currentMessages[currentMessages.length - 1];
-      const nextPersona = lastMessage.personaId === selectedPersonas[0].id ? selectedPersonas[1] : selectedPersonas[0];
+      const nextPersona = selectedPersonas[nextResponder];
       
       // Build conversation history
-      const conversationHistory = currentMessages.map(msg => ({
+      const conversationHistory = messages.map(msg => ({
         role: 'assistant' as const,
         content: msg.content,
         persona: msg.personaId
       }));
       
-     let response: string;
-     
-     if (apiStatus.hasAnyKey) {
-       response = await generateAIResponse({
-         topic: currentTopic,
-         conversationHistory,
-         persona: nextPersona!,
-         isResponse: true,
-         previousMessage: lastMessage.content
-       });
-     } else {
-       response = await generateMockAIResponse({
-         topic: currentTopic,
-         conversationHistory,
-         persona: nextPersona!,
-         isResponse: true,
-         previousMessage: lastMessage.content
-       });
-     }
+      const lastMessage = messages[messages.length - 1];
+      
+      let response: string;
+      
+      if (apiStatus.hasAnyKey) {
+        response = await generateAIResponse({
+          topic: currentTopic,
+          conversationHistory,
+          persona: nextPersona!,
+          isResponse: messages.length > 0,
+          previousMessage: lastMessage?.content
+        });
+      } else {
+        response = await generateMockAIResponse({
+          topic: currentTopic,
+          conversationHistory,
+          persona: nextPersona!,
+          isResponse: messages.length > 0,
+          previousMessage: lastMessage?.content
+        });
+      }
       
       const newMessage: Message = {
         id: Date.now().toString(),
@@ -217,18 +167,8 @@ function App() {
         timestamp: new Date()
       };
       
-      setMessages(prev => {
-        const updatedMessages = [...prev, newMessage];
-        
-        // Continue the conversation if autoPlay is still enabled
-        if (settings.autoPlay && isConversationActive) {
-          setTimeout(() => {
-            continueConversationWithHistory(updatedMessages);
-          }, (settings.responseDelay + Math.random() * 2) * 1000);
-        }
-        
-        return updatedMessages;
-      });
+      setMessages(prev => [...prev, newMessage]);
+      setNextResponder(nextResponder === 0 ? 1 : 0); // Switch to other persona
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
@@ -236,27 +176,42 @@ function App() {
     }
   };
 
-  const continueConversation = async () => {
-    continueConversationWithHistory(messages);
+  const handleExportConversation = () => {
+    if (messages.length === 0) return;
+    
+    const conversationData = {
+      topic: currentTopic,
+      personas: selectedPersonas.map(p => p ? { name: p.name, model: p.model } : null),
+      messages: messages.map(msg => ({
+        persona: selectedPersonas.find(p => p?.id === msg.personaId)?.name || 'Unknown',
+        content: msg.content,
+        timestamp: msg.timestamp.toISOString()
+      })),
+      exportedAt: new Date().toISOString()
+    };
+    
+    const dataStr = JSON.stringify(conversationData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ai-gossip-conversation-${Date.now()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
+
   const handleModerationAction = async (action: ModerationAction) => {
     switch (action.type) {
-      case 'continue':
-        if (isConversationActive && !isLoading) {
-          continueConversation();
-        }
-        break;
       case 'pause':
         setIsConversationActive(false);
         break;
       case 'resume':
         setIsConversationActive(true);
-        // Resume conversation if autoPlay is enabled
-        if (settings.autoPlay) {
-          setTimeout(() => {
-            continueConversation();
-          }, 1000);
-        }
+        break;
+      case 'export':
+        handleExportConversation();
         break;
       case 'refocus':
         // Add a refocus instruction to the conversation
@@ -310,7 +265,11 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
-      <Navbar onSettingsClick={() => setShowSettings(!showSettings)} apiStatus={apiStatus} />
+      <Navbar 
+        onSettingsClick={() => setShowSettings(!showSettings)} 
+        onAboutClick={() => setShowAbout(!showAbout)}
+        apiStatus={apiStatus} 
+      />
       
       <div className="container mx-auto px-4 py-8">
         {/* Welcome Section */}
@@ -356,9 +315,42 @@ function App() {
             <SettingsPanel settings={settings} onSettingsChange={setSettings} />
           </div>
         )}
+        
+        {/* About Panel */}
+        {showAbout && (
+          <div className="mb-8">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">About AI Gossip</h2>
+              <div className="prose dark:prose-invert max-w-none">
+                <p className="text-gray-600 dark:text-gray-300 mb-4">
+                  AI Gossip is a sophisticated discussion playground where real AI models (OpenAI GPT-4 and Google Gemini) 
+                  engage in conversations that you can moderate and direct.
+                </p>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">Features</h3>
+                <ul className="text-gray-600 dark:text-gray-300 mb-4 space-y-1">
+                  <li>• Real AI Conversations between OpenAI's GPT-4 and Google's Gemini</li>
+                  <li>• 6 Unique Personas with distinct personalities and response styles</li>
+                  <li>• Manual Conversation Control - you decide when each AI responds</li>
+                  <li>• Professional Interface with podcast studio aesthetics</li>
+                  <li>• Advanced Settings including dark mode and response timing</li>
+                  <li>• Export & Share conversation transcripts</li>
+                </ul>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">Developer</h3>
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                  <p className="text-gray-700 dark:text-gray-300">
+                    <strong>Prabhat Chandra</strong><br/>
+                    Full Stack Developer & AI Enthusiast<br/>
+                    Email: <a href="mailto:pchandra114@gmail.com" className="text-blue-600 dark:text-blue-400 hover:underline">pchandra114@gmail.com</a><br/>
+                    GitHub: <a href="https://github.com/pchandra191" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">@pchandra191</a>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 opacity-50 pointer-events-none">
           {/* Left Column - Setup */}
           <div className="space-y-6">
             <PersonaSelector
@@ -380,7 +372,18 @@ function App() {
           </div>
 
           {/* Center Column - Chat */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 relative">
+            <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 bg-opacity-50 rounded-xl flex items-center justify-center z-10">
+              <div className="text-center">
+                <div className="text-4xl mb-2">🚧</div>
+                <p className="text-gray-600 dark:text-gray-400 font-medium">
+                  Persona and Topic selection disabled
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-500">
+                  Use the manual controls below to manage conversations
+                </p>
+              </div>
+            </div>
             <ChatInterface
               messages={messages}
               personas={selectedPersonas}
@@ -391,15 +394,17 @@ function App() {
         </div>
 
         {/* Bottom Row - Moderation */}
-        {(messages.length > 0 || isConversationActive) && (
-          <div className="mt-8">
-            <ModerationPanel
-              onModerationAction={handleModerationAction}
-              isActive={isConversationActive}
-              messageCount={messages.length}
-            />
-          </div>
-        )}
+        <div className="mt-8">
+          <ModerationPanel
+            onModerationAction={handleModerationAction}
+            onGetNextResponse={getNextResponse}
+            isActive={isConversationActive}
+            messageCount={messages.length}
+            nextResponder={nextResponder}
+            personas={selectedPersonas}
+            isLoading={isLoading}
+          />
+        </div>
       </div>
       
       <Footer />

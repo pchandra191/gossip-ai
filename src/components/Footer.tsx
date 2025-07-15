@@ -42,9 +42,22 @@ export const Footer: React.FC = () => {
             <p className="mt-4 text-gray-600 dark:text-gray-400 max-w-md">
               Experience the future of AI conversations. Watch real AI models debate, 
               discuss, and explore ideas while you moderate and guide the discussion.
-              <br></br>
-              Developer:<b>Prabhat Chandra</b> 
             </p>
+            <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <h4 className="font-semibold text-gray-800 dark:text-white mb-2">Developer</h4>
+              <div className="text-gray-600 dark:text-gray-300">
+                <p className="font-medium">Prabhat Chandra</p>
+                <p className="text-sm">Full Stack Developer & AI Enthusiast</p>
+                <div className="flex flex-col sm:flex-row sm:space-x-4 mt-2 text-sm">
+                  <a href="mailto:pchandra114@gmail.com" className="text-blue-600 dark:text-blue-400 hover:underline">
+                    pchandra114@gmail.com
+                  </a>
+                  <a href="https://github.com/pchandra191" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">
+                    GitHub: @pchandra191
+                  </a>
+                </div>
+              </div>
+            </div>
             <div className="mt-6 flex space-x-4">
               {footerLinks.community.map((link, index) => (
                 <a
@@ -122,7 +135,7 @@ export const Footer: React.FC = () => {
         <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-400">
-              <span>© {currentYear} aPCreations. Made with</span>
+              <span>© {currentYear} Prabhat Chandra. Made with</span>
               <Heart size={16} className="text-red-500" />
               <span>for AI enthusiasts</span>
             </div>
