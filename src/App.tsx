@@ -116,11 +116,11 @@ function App() {
 
       // Follow up with second persona
       setTimeout(async () => {
-        if (!isConversationActive) return; // Check if still active
+        // Don't check isConversationActive here as it might not be updated yet
         
         setIsLoading(true);
         
-        const updatedHistory = [...conversationHistory, {
+        const updatedHistory = [{
           role: 'assistant' as const,
           content: firstResponse,
           persona: selectedPersonas[0]!.id
@@ -153,15 +153,19 @@ function App() {
           timestamp: new Date()
         };
 
-        setMessages(prev => [...prev, secondMessage]);
+        setMessages(prev => {
+          const newMessages = [...prev, secondMessage];
+          
+          // Continue conversation automatically if autoPlay is enabled
+          if (settings.autoPlay) {
+            setTimeout(() => {
+              continueConversationWithHistory(newMessages);
+            }, (settings.responseDelay + 1) * 1000);
+          }
+          
+          return newMessages;
+        });
         setIsLoading(false);
-        
-        // Continue conversation automatically if autoPlay is enabled
-        if (settings.autoPlay && isConversationActive && messages.length >= 2) {
-          setTimeout(() => {
-            continueConversation();
-          }, (settings.responseDelay + 1) * 1000);
-        }
       }, settings.responseDelay * 1000);
     } catch (error) {
       setIsLoading(false);
@@ -169,18 +173,18 @@ function App() {
     }
   };
 
-  const continueConversation = async () => {
-    if (!isConversationActive || !selectedPersonas[0] || !selectedPersonas[1] || messages.length === 0 || isLoading) return;
+  const continueConversationWithHistory = async (currentMessages: Message[]) => {
+    if (!isConversationActive || !selectedPersonas[0] || !selectedPersonas[1] || currentMessages.length === 0 || isLoading) return;
     
     setIsLoading(true);
     
     try {
       // Determine which persona should respond next
-      const lastMessage = messages[messages.length - 1];
+      const lastMessage = currentMessages[currentMessages.length - 1];
       const nextPersona = lastMessage.personaId === selectedPersonas[0].id ? selectedPersonas[1] : selectedPersonas[0];
       
       // Build conversation history
-      const conversationHistory = messages.map(msg => ({
+      const conversationHistory = currentMessages.map(msg => ({
         role: 'assistant' as const,
         content: msg.content,
         persona: msg.personaId
@@ -213,21 +217,28 @@ function App() {
         timestamp: new Date()
       };
       
-      setMessages(prev => [...prev, newMessage]);
+      setMessages(prev => {
+        const updatedMessages = [...prev, newMessage];
+        
+        // Continue the conversation if autoPlay is still enabled
+        if (settings.autoPlay && isConversationActive) {
+          setTimeout(() => {
+            continueConversationWithHistory(updatedMessages);
+          }, (settings.responseDelay + Math.random() * 2) * 1000);
+        }
+        
+        return updatedMessages;
+      });
       setIsLoading(false);
-      
-      // Continue the conversation if autoPlay is still enabled
-      if (settings.autoPlay && isConversationActive) {
-        setTimeout(() => {
-          continueConversation();
-        }, (settings.responseDelay + Math.random() * 2) * 1000);
-      }
     } catch (error) {
       setIsLoading(false);
       console.error('Error continuing conversation:', error);
     }
   };
 
+  const continueConversation = async () => {
+    continueConversationWithHistory(messages);
+  };
   const handleModerationAction = async (action: ModerationAction) => {
     switch (action.type) {
       case 'continue':

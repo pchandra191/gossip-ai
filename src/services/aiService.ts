@@ -117,7 +117,15 @@ const generateGeminiResponse = async (context: ConversationContext): Promise<str
   const { topic, conversationHistory, persona, isResponse, previousMessage } = context;
 
   const client = getGeminiClient();
-  const model = client.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const model = client.getGenerativeModel({ 
+    model: 'gemini-2.0-flash',
+    generationConfig: {
+      temperature: 0.8,
+      topK: 40,
+      topP: 0.95,
+      maxOutputTokens: 150,
+    }
+  });
 
   // Build conversation context for Gemini
   let prompt = `${persona.systemPrompt}\n\nYou are discussing the topic: "${topic}"\n\nThis is a conversation between two AI assistants. The user is moderating the discussion.\n\n`;
@@ -142,9 +150,13 @@ const generateGeminiResponse = async (context: ConversationContext): Promise<str
     prompt += `Please start the discussion about "${topic}". Give your opening thoughts on this topic. Keep your response conversational and around 2-3 sentences.`;
   }
 
+  console.log('Gemini prompt:', prompt); // Debug log
+
   const result = await model.generateContent(prompt);
   const response = await result.response;
   const text = response.text();
+
+  console.log('Gemini response:', text); // Debug log
 
   return text || 'I apologize, but I couldn\'t generate a response at this time.';
 };

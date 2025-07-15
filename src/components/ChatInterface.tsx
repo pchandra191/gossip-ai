@@ -47,10 +47,15 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg h-96 flex flex-col">
       <div className="px-6 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-t-xl">
-        <h2 className="text-xl font-bold text-white flex items-center">
-          <span className="mr-2">🎙️</span>
-          Live Discussion
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold text-white flex items-center">
+            <span className="mr-2">🎙️</span>
+            Live Discussion
+          </h2>
+          <div className="text-white text-sm">
+            {messages.length} messages
+          </div>
+        </div>
       </div>
       
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -75,6 +80,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
                     {persona.name}
                   </span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500 ml-2 px-2 py-1 bg-gray-100 dark:bg-gray-600 rounded">
+                    {persona.model.toUpperCase()}
+                  </span>
                   <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">
                     {formatTime(message.timestamp)}
                   </span>
@@ -98,10 +106,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         
         {isLoading && (
           <div className="flex justify-center">
-            <div className="flex space-x-2">
-              <div className="w-3 h-3 bg-gray-400 rounded-full animate-bounce"></div>
-              <div className="w-3 h-3 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-              <div className="w-3 h-3 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            <div className="flex flex-col items-center space-y-2">
+              <div className="flex space-x-2">
+                <div className="w-3 h-3 bg-gray-400 rounded-full animate-bounce"></div>
+                <div className="w-3 h-3 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-3 h-3 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              </div>
+              <span className="text-xs text-gray-500 dark:text-gray-400">AI is thinking...</span>
             </div>
           </div>
         )}
