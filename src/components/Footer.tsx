@@ -122,7 +122,7 @@ export const Footer: React.FC = () => {
         <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-400">
-              <span>© {currentYear} AI Gossip. Made with</span>
+              <span>© {currentYear} aPCreations. Made with</span>
               <Heart size={16} className="text-red-500" />
               <span>for AI enthusiasts</span>
             </div>
