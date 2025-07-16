@@ -24,6 +24,7 @@ function App() {
   const [showAbout, setShowAbout] = useState(false);
   const [nextResponder, setNextResponder] = useState<0 | 1 | null>(null);
   const [apiStatus, setApiStatus] = useState<ApiStatus>({ openai: false, gemini: false, hasAnyKey: false, error: null });
+  const [conversationEnded, setConversationEnded] = useState(false);
   const [settings, setSettings] = useState<AppSettings>({
     darkMode: false,
     voiceEnabled: false,
@@ -79,6 +80,7 @@ function App() {
     setCurrentTopic(topic);
     setMessages([]);
     setIsConversationActive(true);
+    setConversationEnded(false);
     setNextResponder(0); // Start with first persona
     setIsLoading(true);
 
@@ -121,6 +123,22 @@ function App() {
       setIsLoading(false);
       console.error('Error generating AI response:', error);
     }
+  };
+
+  const handleEndConversation = () => {
+    setIsConversationActive(false);
+    setConversationEnded(true);
+    setNextResponder(null);
+    setIsLoading(false);
+  };
+
+  const handleStartNewConversation = () => {
+    setMessages([]);
+    setCurrentTopic('');
+    setIsConversationActive(false);
+    setConversationEnded(false);
+    setNextResponder(null);
+    setIsLoading(false);
   };
 
   const getNextResponse = async () => {
@@ -350,22 +368,39 @@ function App() {
         )}
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 opacity-50 pointer-events-none">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Setup */}
           <div className="space-y-6">
+            {/* Overlay for disabled state */}
+            {(isConversationActive || isLoading) && (
+              <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 bg-opacity-75 rounded-xl flex items-center justify-center z-10">
+                <div className="text-center">
+                  <div className="text-3xl mb-2">🔒</div>
+                  <p className="text-gray-600 dark:text-gray-400 font-medium">
+                    Conversation in Progress
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-500">
+                    End the current conversation to start a new one
+                  </p>
+                </div>
+              </div>
+            )}
+            
             <PersonaSelector
               selectedPersonas={selectedPersonas}
               onPersonaSelect={handlePersonaSelect}
-              disabled={isConversationActive}
+              disabled={isConversationActive || isLoading}
               apiStatus={apiStatus}
             />
             
             <TopicInput
               onTopicSubmit={handleTopicSubmit}
-              disabled={!canStartConversation}
+              disabled={!canStartConversation || isConversationActive || isLoading}
               placeholder={
-                !canStartConversation 
+                !canStartConversation && !isConversationActive
                   ? "Select both debaters first..."
+                  : isConversationActive
+                  ? "Conversation in progress..."
                   : "Enter a topic for the debate..."
               }
             />
@@ -373,17 +408,6 @@ function App() {
 
           {/* Center Column - Chat */}
           <div className="lg:col-span-2 relative">
-            <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 bg-opacity-50 rounded-xl flex items-center justify-center z-10">
-              <div className="text-center">
-                <div className="text-4xl mb-2">🚧</div>
-                <p className="text-gray-600 dark:text-gray-400 font-medium">
-                  Persona and Topic selection disabled
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-500">
-                  Use the manual controls below to manage conversations
-                </p>
-              </div>
-            </div>
             <ChatInterface
               messages={messages}
               personas={selectedPersonas}
@@ -398,11 +422,15 @@ function App() {
           <ModerationPanel
             onModerationAction={handleModerationAction}
             onGetNextResponse={getNextResponse}
+            onEndConversation={handleEndConversation}
+            onStartNewConversation={handleStartNewConversation}
             isActive={isConversationActive}
+            conversationEnded={conversationEnded}
             messageCount={messages.length}
             nextResponder={nextResponder}
             personas={selectedPersonas}
             isLoading={isLoading}
+            currentTopic={currentTopic}
           />
         </div>
       </div>

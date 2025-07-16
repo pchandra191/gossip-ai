@@ -66,7 +66,7 @@ export const TopicInput: React.FC<TopicInputProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg relative">
       <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4 text-center">
         Choose Your Debate Topic
       </h2>

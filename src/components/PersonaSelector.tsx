@@ -41,7 +41,7 @@ export const PersonaSelector: React.FC<PersonaSelectorProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg relative">
       <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 text-center">
         Choose Your Debaters
       </h2>
