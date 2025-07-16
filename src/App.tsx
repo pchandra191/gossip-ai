@@ -519,14 +519,15 @@ Keep it concise but comprehensive, focusing on the main ideas and different view
                   <li>• Export & Share conversation transcripts</li>
                 </ul>
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">Developer</h3>
-                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                  <p className="text-gray-700 dark:text-gray-300">
-                    <strong>Prabhat Chandra</strong><br/>
-                    Full Stack Developer & AI Enthusiast<br/>
-                    Email: <a href="mailto:apcreations191@gmail.com" className="text-blue-600 dark:text-blue-400 hover:underline">apcreations191@gmail.com</a><br/>
-                    GitHub: <a href="https://github.com/pchandra191" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">@pchandra191</a>
-                  </p>
+                <div className="text-gray-600 dark:text-gray-300">
+                  <p className="font-medium">Prabhat Chandra</p>
+                  <p className="text-sm">Full Stack Developer & AI Enthusiast</p>
+                  <div className="flex flex-col sm:flex-row sm:space-x-4 mt-2 text-sm">
+                    <a href="https://commons.wikimedia.org/wiki/User:Prabhat114" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">
+                      Wiki: @Prabhat114
+                    </a>
                 </div>
+              </div>
               </div>
             </div>
           </div>
