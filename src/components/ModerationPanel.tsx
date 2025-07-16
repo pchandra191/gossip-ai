@@ -1,17 +1,33 @@
 import React, { useState } from 'react';
-import { RotateCcw, MessageSquare, FileText, HelpCircle, Play, Pause, Download } from 'lucide-react';
-import { ModerationAction } from '../types';
+import { RotateCcw, MessageSquare, FileText, HelpCircle, Play, Pause, Download, ArrowRight, X } from 'lucide-react';
+import { ModerationAction, Persona } from '../types';
 
 interface ModerationPanelProps {
   onModerationAction: (action: ModerationAction) => void;
+  onGetNextResponse: () => void;
+  onEndConversation: () => void;
+  onStartNewConversation: () => void;
   isActive?: boolean;
+  conversationEnded?: boolean;
   messageCount?: number;
+  nextResponder?: 0 | 1 | null;
+  personas: [Persona | null, Persona | null];
+  isLoading?: boolean;
+  currentTopic?: string;
 }
 
 export const ModerationPanel: React.FC<ModerationPanelProps> = ({
   onModerationAction,
+  onGetNextResponse,
+  onEndConversation,
+  onStartNewConversation,
   isActive = false,
-  messageCount = 0
+  conversationEnded = false,
+  messageCount = 0,
+  nextResponder = null,
+  personas,
+  isLoading = false,
+  currentTopic = ''
 }) => {
   const [showTopicInput, setShowTopicInput] = useState(false);
   const [showClarifyInput, setShowClarifyInput] = useState(false);
@@ -69,22 +85,94 @@ export const ModerationPanel: React.FC<ModerationPanelProps> = ({
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-          Moderation Control
+          Manual Conversation Control
         </h2>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-4">
+          {currentTopic && (
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              Topic: <span className="font-medium">{currentTopic}</span>
+            </div>
+          )}
           <div className={`w-3 h-3 rounded-full ${isActive ? 'bg-green-500' : 'bg-gray-400'}`}></div>
           <span className="text-sm text-gray-600 dark:text-gray-400">
             {messageCount} messages
           </span>
         </div>
       </div>
+      
+      {/* Next Response Control */}
+      {!conversationEnded && (
+        <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">Get Next Response</h3>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            {nextResponder !== null && personas[nextResponder] && (
+              <>
+                <span className="text-2xl">{personas[nextResponder]!.avatar}</span>
+                <div>
+                  <p className="font-medium text-gray-800 dark:text-white">
+                    {personas[nextResponder]!.name}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {personas[nextResponder]!.model.toUpperCase()} • {personas[nextResponder]!.responseStyle}
+                  </p>
+                </div>
+              </>
+            )}
+            {nextResponder === null && (
+              <p className="text-gray-600 dark:text-gray-400">
+                Start a conversation to enable responses
+              </p>
+            )}
+          </div>
+          <button
+            onClick={onGetNextResponse}
+            disabled={!isActive || nextResponder === null || isLoading}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Thinking...</span>
+              </>
+            ) : (
+              <>
+                <span>Get Response</span>
+                <ArrowRight size={16} />
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+      )}
 
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      {/* Conversation Status */}
+      {conversationEnded && (
+        <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-lg border border-green-200 dark:border-green-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Conversation Ended</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                You can now start a new conversation or export this one
+              </p>
+            </div>
+            <button
+              onClick={onStartNewConversation}
+              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+            >
+              Start New Conversation
+            </button>
+          </div>
+        </div>
+      )}
+
+      {isActive && !conversationEnded && (
+        <div className="grid grid-cols-2 gap-4 mb-6">
         {moderationButtons.map((button, index) => (
           <button
             key={index}
             onClick={button.action}
-            disabled={!isActive}
+            disabled={!isActive || conversationEnded}
             className={`p-4 rounded-lg text-white transition-all duration-200 ${
               button.color
             } disabled:opacity-50 disabled:cursor-not-allowed group`}
@@ -97,30 +185,38 @@ export const ModerationPanel: React.FC<ModerationPanelProps> = ({
           </button>
         ))}
       </div>
+      )}
 
       {/* Playback Controls */}
       <div className="flex items-center justify-center space-x-4 mb-6">
-        <button
-          onClick={() => onModerationAction({ type: 'continue' } as ModerationAction)}
-          disabled={!isActive || messageCount === 0}
-          className="p-3 rounded-full bg-blue-500 hover:bg-blue-600 text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Continue conversation"
-        >
-          <MessageSquare size={20} />
-        </button>
-        <button
+        {!conversationEnded && (
+          <button
           onClick={() => onModerationAction({ type: isActive ? 'pause' : 'resume' })}
           disabled={messageCount === 0}
           className={`p-3 rounded-full text-white transition-all duration-200 ${
             isActive ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'
           } disabled:opacity-50 disabled:cursor-not-allowed`}
+          title={isActive ? 'Pause conversation' : 'Resume conversation'}
         >
           {isActive ? <Pause size={20} /> : <Play size={20} />}
         </button>
+        )}
+        
+        {isActive && !conversationEnded && (
+          <button
+            onClick={onEndConversation}
+            className="p-3 rounded-full bg-orange-500 hover:bg-orange-600 text-white transition-all duration-200"
+            title="End conversation"
+          >
+            <X size={20} />
+          </button>
+        )}
+        
         <button
           onClick={() => onModerationAction({ type: 'export' } as ModerationAction)}
           disabled={messageCount === 0}
           className="p-3 rounded-full bg-gray-500 hover:bg-gray-600 text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Export conversation"
         >
           <Download size={20} />
         </button>

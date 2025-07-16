@@ -9,7 +9,7 @@ import { SettingsPanel } from './components/SettingsPanel';
 import { Footer } from './components/Footer';
 import { generateAIResponse, validateApiKeys } from './services/aiService';
 import { generateMockAIResponse } from './utils/mockAI';
-import { Persona, Message, AppSettings, ModerationAction, Conversation } from './types';
+import { Persona, Message, AppSettings, ModerationAction, Conversation, ApiStatus } from './types';
 import { Share2, Download } from 'lucide-react';
 
 function App() {
@@ -21,13 +21,16 @@ function App() {
   const [isAppLoading, setIsAppLoading] = useState(true);
   const [isCheckingApi, setIsCheckingApi] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
-  const [apiStatus, setApiStatus] = useState({ openai: false, hasAnyKey: false, error: null });
+  const [showAbout, setShowAbout] = useState(false);
+  const [nextResponder, setNextResponder] = useState<0 | 1 | null>(null);
+  const [apiStatus, setApiStatus] = useState<ApiStatus>({ openai: false, gemini: false, hasAnyKey: false, error: null });
+  const [conversationEnded, setConversationEnded] = useState(false);
   const [settings, setSettings] = useState<AppSettings>({
     darkMode: false,
     voiceEnabled: false,
     animationsEnabled: true,
     toneMode: 'casual',
-    autoPlay: true,
+    autoPlay: false,
     responseDelay: 3
   });
 
@@ -77,6 +80,8 @@ function App() {
     setCurrentTopic(topic);
     setMessages([]);
     setIsConversationActive(true);
+    setConversationEnded(false);
+    setNextResponder(0); // Start with first persona
     setIsLoading(true);
 
     // Start conversation with first persona
@@ -113,71 +118,36 @@ function App() {
 
       setMessages([firstMessage]);
       setIsLoading(false);
-
-      // Follow up with second persona
-      setTimeout(async () => {
-        if (!isConversationActive) return; // Check if still active
-        
-        setIsLoading(true);
-        
-        const updatedHistory = [...conversationHistory, {
-          role: 'assistant' as const,
-          content: firstResponse,
-          persona: selectedPersonas[0]!.id
-        }];
-        
-        let secondResponse: string;
-        
-        if (apiStatus.hasAnyKey) {
-          secondResponse = await generateAIResponse({
-            topic,
-            conversationHistory: updatedHistory,
-            persona: selectedPersonas[1]!,
-            isResponse: true,
-            previousMessage: firstResponse
-          });
-        } else {
-          secondResponse = await generateMockAIResponse({
-            topic,
-            conversationHistory: updatedHistory,
-            persona: selectedPersonas[1]!,
-            isResponse: true,
-            previousMessage: firstResponse
-          });
-        }
-
-        const secondMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          personaId: selectedPersonas[1]!.id,
-          content: secondResponse,
-          timestamp: new Date()
-        };
-
-        setMessages(prev => [...prev, secondMessage]);
-        setIsLoading(false);
-        
-        // Continue conversation automatically if autoPlay is enabled
-        if (settings.autoPlay && isConversationActive && messages.length >= 2) {
-          setTimeout(() => {
-            continueConversation();
-          }, (settings.responseDelay + 1) * 1000);
-        }
-      }, settings.responseDelay * 1000);
+      setNextResponder(1); // Next response should come from second persona
     } catch (error) {
       setIsLoading(false);
       console.error('Error generating AI response:', error);
     }
   };
 
-  const continueConversation = async () => {
-    if (!isConversationActive || !selectedPersonas[0] || !selectedPersonas[1] || messages.length === 0 || isLoading) return;
+  const handleEndConversation = () => {
+    setIsConversationActive(false);
+    setConversationEnded(true);
+    setNextResponder(null);
+    setIsLoading(false);
+  };
+
+  const handleStartNewConversation = () => {
+    setMessages([]);
+    setCurrentTopic('');
+    setIsConversationActive(false);
+    setConversationEnded(false);
+    setNextResponder(null);
+    setIsLoading(false);
+  };
+
+  const getNextResponse = async () => {
+    if (!isConversationActive || !selectedPersonas[0] || !selectedPersonas[1] || isLoading || nextResponder === null) return;
     
     setIsLoading(true);
     
     try {
-      // Determine which persona should respond next
-      const lastMessage = messages[messages.length - 1];
-      const nextPersona = lastMessage.personaId === selectedPersonas[0].id ? selectedPersonas[1] : selectedPersonas[0];
+      const nextPersona = selectedPersonas[nextResponder];
       
       // Build conversation history
       const conversationHistory = messages.map(msg => ({
@@ -186,25 +156,27 @@ function App() {
         persona: msg.personaId
       }));
       
-     let response: string;
-     
-     if (apiStatus.hasAnyKey) {
-       response = await generateAIResponse({
-         topic: currentTopic,
-         conversationHistory,
-         persona: nextPersona!,
-         isResponse: true,
-         previousMessage: lastMessage.content
-       });
-     } else {
-       response = await generateMockAIResponse({
-         topic: currentTopic,
-         conversationHistory,
-         persona: nextPersona!,
-         isResponse: true,
-         previousMessage: lastMessage.content
-       });
-     }
+      const lastMessage = messages[messages.length - 1];
+      
+      let response: string;
+      
+      if (apiStatus.hasAnyKey) {
+        response = await generateAIResponse({
+          topic: currentTopic,
+          conversationHistory,
+          persona: nextPersona!,
+          isResponse: messages.length > 0,
+          previousMessage: lastMessage?.content
+        });
+      } else {
+        response = await generateMockAIResponse({
+          topic: currentTopic,
+          conversationHistory,
+          persona: nextPersona!,
+          isResponse: messages.length > 0,
+          previousMessage: lastMessage?.content
+        });
+      }
       
       const newMessage: Message = {
         id: Date.now().toString(),
@@ -214,50 +186,53 @@ function App() {
       };
       
       setMessages(prev => [...prev, newMessage]);
+      setNextResponder(nextResponder === 0 ? 1 : 0); // Switch to other persona
       setIsLoading(false);
-      
-      // Continue the conversation if autoPlay is still enabled
-      if (settings.autoPlay && isConversationActive) {
-        setTimeout(() => {
-          continueConversation();
-        }, (settings.responseDelay + Math.random() * 2) * 1000);
-      }
     } catch (error) {
       setIsLoading(false);
       console.error('Error continuing conversation:', error);
     }
   };
 
+  const handleExportConversation = () => {
+    if (messages.length === 0) return;
+    
+    const conversationData = {
+      topic: currentTopic,
+      personas: selectedPersonas.map(p => p ? { name: p.name, model: p.model } : null),
+      messages: messages.map(msg => ({
+        persona: selectedPersonas.find(p => p?.id === msg.personaId)?.name || 'Unknown',
+        content: msg.content,
+        timestamp: msg.timestamp.toISOString()
+      })),
+      exportedAt: new Date().toISOString()
+    };
+    
+    const dataStr = JSON.stringify(conversationData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ai-gossip-conversation-${Date.now()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const handleModerationAction = async (action: ModerationAction) => {
     switch (action.type) {
-      case 'continue':
-        if (isConversationActive && !isLoading) {
-          continueConversation();
-        }
-        break;
       case 'pause':
         setIsConversationActive(false);
         break;
       case 'resume':
         setIsConversationActive(true);
-        // Resume conversation if autoPlay is enabled
-        if (settings.autoPlay) {
-          setTimeout(() => {
-            continueConversation();
-          }, 1000);
-        }
+        break;
+      case 'export':
+        handleExportConversation();
         break;
       case 'refocus':
-        // Add a refocus instruction to the conversation
-        if (selectedPersonas[0] && selectedPersonas[1]) {
-          const refocusMessage: Message = {
-            id: Date.now().toString(),
-            personaId: selectedPersonas[0].id,
-            content: "Let me refocus our discussion on the main topic...",
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, refocusMessage]);
-        }
+        await handleRefocusConversation();
         break;
       case 'changeTopic':
         if (action.payload) {
@@ -265,29 +240,203 @@ function App() {
         }
         break;
       case 'summarize':
-        if (selectedPersonas[0]) {
-          const summaryMessage: Message = {
-            id: Date.now().toString(),
-            personaId: selectedPersonas[0].id,
-            content: "To summarize our discussion so far: we've covered the main points about " + currentTopic + " and explored different perspectives on this topic.",
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, summaryMessage]);
-        }
+        await handleSummarizeConversation();
         break;
       case 'clarify':
-        if (action.payload && selectedPersonas[1]) {
-          const clarifyMessage: Message = {
-            id: Date.now().toString(),
-            personaId: selectedPersonas[1].id,
-            content: `Good question! Let me clarify: ${action.payload}`,
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, clarifyMessage]);
+        if (action.payload) {
+          await handleClarifyQuestion(action.payload);
         }
         break;
       default:
         break;
+    }
+  };
+
+  const handleRefocusConversation = async () => {
+    if (!selectedPersonas[0] || messages.length === 0) return;
+    
+    setIsLoading(true);
+    
+    try {
+      const conversationHistory = messages.map(msg => ({
+        role: 'assistant' as const,
+        content: msg.content,
+        persona: msg.personaId
+      }));
+
+      const refocusPrompt = `Please refocus our discussion back to the main topic: "${currentTopic}". Acknowledge that we may have strayed and bring us back on track.`;
+      
+      let response: string;
+      
+      if (apiStatus.hasAnyKey) {
+        response = await generateAIResponse({
+          topic: currentTopic,
+          conversationHistory,
+          persona: selectedPersonas[0],
+          isResponse: true,
+          previousMessage: refocusPrompt
+        });
+      } else {
+        response = await generateMockAIResponse({
+          topic: currentTopic,
+          conversationHistory,
+          persona: selectedPersonas[0],
+          isResponse: true,
+          previousMessage: refocusPrompt
+        });
+      }
+      
+      const refocusMessage: Message = {
+        id: Date.now().toString(),
+        personaId: selectedPersonas[0].id,
+        content: response,
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, refocusMessage]);
+      setNextResponder(1); // Next response from second persona
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      console.error('Error refocusing conversation:', error);
+    }
+  };
+
+  const handleSummarizeConversation = async () => {
+    if (!selectedPersonas[0] || messages.length === 0) return;
+    
+    setIsLoading(true);
+    
+    try {
+      // Create a comprehensive summary of the conversation
+      const conversationText = messages.map((msg, index) => {
+        const persona = selectedPersonas.find(p => p?.id === msg.personaId);
+        return `${persona?.name || 'Unknown'}: ${msg.content}`;
+      }).join('\n\n');
+      
+      const summaryPrompt = `Please provide a comprehensive point-wise summary of our discussion about "${currentTopic}". 
+      
+Here's our conversation so far:
+${conversationText}
+
+Please summarize this in the following format:
+
+## Discussion Summary: ${currentTopic}
+
+### Key Points Discussed:
+• [Point 1]
+• [Point 2]
+• [Point 3]
+
+### Different Perspectives:
+• [Perspective 1]
+• [Perspective 2]
+
+### Main Arguments:
+• [Argument 1]
+• [Argument 2]
+
+### Conclusions/Insights:
+• [Insight 1]
+• [Insight 2]
+
+Keep it concise but comprehensive, focusing on the main ideas and different viewpoints presented.`;
+      
+      let response: string;
+      
+      if (apiStatus.hasAnyKey) {
+        response = await generateAIResponse({
+          topic: currentTopic,
+          conversationHistory: [],
+          persona: selectedPersonas[0],
+          isResponse: true,
+          previousMessage: summaryPrompt
+        });
+      } else {
+        // Mock summary for demo mode
+        response = `## Discussion Summary: ${currentTopic}
+
+### Key Points Discussed:
+• We explored different aspects of ${currentTopic}
+• Various perspectives were presented by both participants
+• The discussion covered both pros and cons of the topic
+
+### Different Perspectives:
+• ${selectedPersonas[0]?.name} emphasized ${selectedPersonas[0]?.traits[0]?.toLowerCase()} viewpoints
+• ${selectedPersonas[1]?.name} brought ${selectedPersonas[1]?.traits[0]?.toLowerCase()} insights
+
+### Main Arguments:
+• Strong evidence was presented for multiple sides
+• Logical reasoning was applied throughout the discussion
+
+### Conclusions/Insights:
+• The topic requires nuanced understanding
+• Multiple valid perspectives exist on this subject`;
+      }
+      
+      const summaryMessage: Message = {
+        id: Date.now().toString(),
+        personaId: selectedPersonas[0].id,
+        content: response,
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, summaryMessage]);
+      setNextResponder(1); // Next response from second persona
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      console.error('Error generating summary:', error);
+    }
+  };
+
+  const handleClarifyQuestion = async (question: string) => {
+    if (!selectedPersonas[1]) return;
+    
+    setIsLoading(true);
+    
+    try {
+      const conversationHistory = messages.map(msg => ({
+        role: 'assistant' as const,
+        content: msg.content,
+        persona: msg.personaId
+      }));
+
+      const clarifyPrompt = `The moderator is asking for clarification: "${question}". Please provide a clear and detailed explanation addressing this question in the context of our discussion about "${currentTopic}".`;
+      
+      let response: string;
+      
+      if (apiStatus.hasAnyKey) {
+        response = await generateAIResponse({
+          topic: currentTopic,
+          conversationHistory,
+          persona: selectedPersonas[1],
+          isResponse: true,
+          previousMessage: clarifyPrompt
+        });
+      } else {
+        response = await generateMockAIResponse({
+          topic: currentTopic,
+          conversationHistory,
+          persona: selectedPersonas[1],
+          isResponse: true,
+          previousMessage: `Clarification needed: ${question}`
+        });
+      }
+      
+      const clarifyMessage: Message = {
+        id: Date.now().toString(),
+        personaId: selectedPersonas[1].id,
+        content: response,
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, clarifyMessage]);
+      setNextResponder(0); // Next response from first persona
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      console.error('Error generating clarification:', error);
     }
   };
 
@@ -299,7 +448,11 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
-      <Navbar onSettingsClick={() => setShowSettings(!showSettings)} apiStatus={apiStatus} />
+      <Navbar 
+        onSettingsClick={() => setShowSettings(!showSettings)} 
+        onAboutClick={() => setShowAbout(!showAbout)}
+        apiStatus={apiStatus} 
+      />
       
       <div className="container mx-auto px-4 py-8">
         {/* Welcome Section */}
@@ -345,6 +498,39 @@ function App() {
             <SettingsPanel settings={settings} onSettingsChange={setSettings} />
           </div>
         )}
+        
+        {/* About Panel */}
+        {showAbout && (
+          <div className="mb-8">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">About AI Gossip</h2>
+              <div className="prose dark:prose-invert max-w-none">
+                <p className="text-gray-600 dark:text-gray-300 mb-4">
+                  AI Gossip is a sophisticated discussion playground where real AI models (OpenAI GPT-4 and Google Gemini) 
+                  engage in conversations that you can moderate and direct.
+                </p>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">Features</h3>
+                <ul className="text-gray-600 dark:text-gray-300 mb-4 space-y-1">
+                  <li>• Real AI Conversations between OpenAI's GPT-4 and Google's Gemini</li>
+                  <li>• 6 Unique Personas with distinct personalities and response styles</li>
+                  <li>• Manual Conversation Control - you decide when each AI responds</li>
+                  <li>• Professional Interface with podcast studio aesthetics</li>
+                  <li>• Advanced Settings including dark mode and response timing</li>
+                  <li>• Export & Share conversation transcripts</li>
+                </ul>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">Developer</h3>
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                  <p className="text-gray-700 dark:text-gray-300">
+                    <strong>Prabhat Chandra</strong><br/>
+                    Full Stack Developer & AI Enthusiast<br/>
+                    Email: <a href="mailto:pchandra114@gmail.com" className="text-blue-600 dark:text-blue-400 hover:underline">pchandra114@gmail.com</a><br/>
+                    GitHub: <a href="https://github.com/pchandra191" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">@pchandra191</a>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -353,23 +539,25 @@ function App() {
             <PersonaSelector
               selectedPersonas={selectedPersonas}
               onPersonaSelect={handlePersonaSelect}
-              disabled={isConversationActive}
+              disabled={isConversationActive || isLoading}
               apiStatus={apiStatus}
             />
             
             <TopicInput
               onTopicSubmit={handleTopicSubmit}
-              disabled={!canStartConversation}
+              disabled={!canStartConversation || isConversationActive || isLoading}
               placeholder={
-                !canStartConversation 
+                !canStartConversation && !isConversationActive
                   ? "Select both debaters first..."
+                  : isConversationActive
+                  ? "Conversation in progress..."
                   : "Enter a topic for the debate..."
               }
             />
           </div>
 
           {/* Center Column - Chat */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 relative">
             <ChatInterface
               messages={messages}
               personas={selectedPersonas}
@@ -380,15 +568,21 @@ function App() {
         </div>
 
         {/* Bottom Row - Moderation */}
-        {(messages.length > 0 || isConversationActive) && (
-          <div className="mt-8">
-            <ModerationPanel
-              onModerationAction={handleModerationAction}
-              isActive={isConversationActive}
-              messageCount={messages.length}
-            />
-          </div>
-        )}
+        <div className="mt-8">
+          <ModerationPanel
+            onModerationAction={handleModerationAction}
+            onGetNextResponse={getNextResponse}
+            onEndConversation={handleEndConversation}
+            onStartNewConversation={handleStartNewConversation}
+            isActive={isConversationActive}
+            conversationEnded={conversationEnded}
+            messageCount={messages.length}
+            nextResponder={nextResponder}
+            personas={selectedPersonas}
+            isLoading={isLoading}
+            currentTopic={currentTopic}
+          />
+        </div>
       </div>
       
       <Footer />

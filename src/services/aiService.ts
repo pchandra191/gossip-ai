@@ -1,8 +1,10 @@
 import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { Persona } from '../types';
 
-// Initialize OpenAI client lazily
+// Initialize clients lazily
 let openai: OpenAI | null = null;
+let gemini: GoogleGenerativeAI | null = null;
 
 const getOpenAIClient = (): OpenAI => {
   if (!openai) {
@@ -18,6 +20,17 @@ const getOpenAIClient = (): OpenAI => {
   return openai;
 };
 
+const getGeminiClient = (): GoogleGenerativeAI => {
+  if (!gemini) {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    if (!apiKey || apiKey.trim() === '') {
+      throw new Error('Gemini API key is not configured. Please add VITE_GEMINI_API_KEY to your .env file.');
+    }
+    gemini = new GoogleGenerativeAI(apiKey);
+  }
+  return gemini;
+};
+
 interface ConversationContext {
   topic: string;
   conversationHistory: Array<{
@@ -31,15 +44,21 @@ interface ConversationContext {
 }
 
 export const generateAIResponse = async (context: ConversationContext): Promise<string> => {
-  const { topic, conversationHistory, persona, isResponse = false, previousMessage = '' } = context;
+  const { persona } = context;
 
   try {
-    return await generateOpenAIResponse(context);
+    if (persona.model === 'openai') {
+      return await generateOpenAIResponse(context);
+    } else if (persona.model === 'gemini') {
+      return await generateGeminiResponse(context);
+    } else {
+      throw new Error(`Unsupported model: ${persona.model}`);
+    }
   } catch (error) {
-    console.error(`Error generating OpenAI response:`, error);
+    console.error(`Error generating ${persona.model} response:`, error);
     
     // Fallback responses
-    return `I apologize, but I'm having trouble connecting to OpenAI's servers right now. Let me try to respond based on the topic "${topic}" - this is certainly an interesting discussion point that deserves careful consideration.`;
+    return `I apologize, but I'm having trouble connecting to ${persona.model === 'openai' ? 'OpenAI' : 'Google Gemini'}'s servers right now. Let me try to respond based on the topic "${context.topic}" - this is certainly an interesting discussion point that deserves careful consideration.`;
   }
 };
 
@@ -94,38 +113,111 @@ const generateOpenAIResponse = async (context: ConversationContext): Promise<str
   return completion.choices[0]?.message?.content || 'I apologize, but I couldn\'t generate a response at this time.';
 };
 
+const generateGeminiResponse = async (context: ConversationContext): Promise<string> => {
+  const { topic, conversationHistory, persona, isResponse, previousMessage } = context;
+
+  const client = getGeminiClient();
+  const model = client.getGenerativeModel({ 
+    model: 'gemini-2.0-flash',
+    generationConfig: {
+      temperature: 0.8,
+      topK: 40,
+      topP: 0.95,
+      maxOutputTokens: 150,
+    }
+  });
+
+  // Build conversation context for Gemini
+  let prompt = `${persona.systemPrompt}\n\nYou are discussing the topic: "${topic}"\n\nThis is a conversation between two AI assistants. The user is moderating the discussion.\n\n`;
+
+  // Add conversation history
+  if (conversationHistory.length > 0) {
+    prompt += "Previous conversation:\n";
+    conversationHistory.forEach((msg) => {
+      if (msg.persona && msg.persona !== persona.id) {
+        prompt += `Other AI: ${msg.content}\n`;
+      } else if (msg.persona === persona.id) {
+        prompt += `You: ${msg.content}\n`;
+      }
+    });
+    prompt += "\n";
+  }
+
+  // Add current context
+  if (isResponse && previousMessage) {
+    prompt += `The other AI just said: "${previousMessage}"\n\nPlease respond to this in the context of our discussion about "${topic}". Keep your response conversational and around 2-3 sentences.`;
+  } else {
+    prompt += `Please start the discussion about "${topic}". Give your opening thoughts on this topic. Keep your response conversational and around 2-3 sentences.`;
+  }
+
+  console.log('Gemini prompt:', prompt); // Debug log
+
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  const text = response.text();
+
+  console.log('Gemini response:', text); // Debug log
+
+  return text || 'I apologize, but I couldn\'t generate a response at this time.';
+};
+
 // API key validation
 export const validateApiKeys = async () => {
   const openaiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
   
-  if (!openaiKey || openaiKey.trim() === '') {
+  const hasOpenAI = openaiKey && openaiKey.trim() !== '';
+  const hasGemini = geminiKey && geminiKey.trim() !== '';
+  const hasAnyKey = hasOpenAI || hasGemini;
+
+  if (!hasAnyKey) {
     return {
       openai: false,
+      gemini: false,
       hasAnyKey: false,
-      error: 'No API key configured'
+      error: 'No API keys configured'
     };
   }
 
-  try {
-    // Test the API key with a simple request
-    const client = getOpenAIClient();
-    const testCompletion = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [{ role: 'user', content: 'Hello' }],
-      max_tokens: 5,
-    });
-    
-    return {
-      openai: true,
-      hasAnyKey: true,
-      error: null
-    };
-  } catch (error) {
-    console.error('API key validation failed:', error);
-    return {
-      openai: false,
-      hasAnyKey: false,
-      error: 'Invalid API key or API error'
-    };
+  const results = {
+    openai: false,
+    gemini: false,
+    hasAnyKey: false,
+    error: null as string | null
+  };
+
+  // Test OpenAI if key exists
+  if (hasOpenAI) {
+    try {
+      const client = getOpenAIClient();
+      await client.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: 'Hello' }],
+        max_tokens: 5,
+      });
+      results.openai = true;
+    } catch (error) {
+      console.error('OpenAI API key validation failed:', error);
+    }
   }
+
+  // Test Gemini if key exists
+  if (hasGemini) {
+    try {
+      const client = getGeminiClient();
+      const model = client.getGenerativeModel({ model: 'gemini-2.0-flash' });
+      await model.generateContent('Hello');
+      results.gemini = true;
+    } catch (error) {
+      console.error('Gemini API key validation failed:', error);
+    }
+  }
+
+  results.hasAnyKey = results.openai || results.gemini;
+  
+  if (!results.hasAnyKey) {
+    results.error = 'Invalid API keys or API errors';
+  }
+
+  return results;
 }
