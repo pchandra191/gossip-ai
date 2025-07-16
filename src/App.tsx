@@ -523,7 +523,7 @@ Keep it concise but comprehensive, focusing on the main ideas and different view
                   <p className="text-gray-700 dark:text-gray-300">
                     <strong>Prabhat Chandra</strong><br/>
                     Full Stack Developer & AI Enthusiast<br/>
-                    Email: <a href="mailto:pchandra114@gmail.com" className="text-blue-600 dark:text-blue-400 hover:underline">pchandra114@gmail.com</a><br/>
+                    Email: <a href="mailto:apcreations191@gmail.com" className="text-blue-600 dark:text-blue-400 hover:underline">apcreations191@gmail.com</a><br/>
                     GitHub: <a href="https://github.com/pchandra191" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">@pchandra191</a>
                   </p>
                 </div>

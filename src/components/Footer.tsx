@@ -22,7 +22,7 @@ export const Footer: React.FC = () => {
       { label: 'GitHub', href: 'https://github.com', icon: Github },
       { label: 'Twitter', href: 'https://twitter.com', icon: Twitter },
       { label: 'Discord', href: 'https://discord.com', icon: ExternalLink },
-      { label: 'Contact', href: 'mailto:pchandra114@gmail.com', icon: Mail }
+      { label: 'Contact', href: 'mailto:apcreations191@gmail.com', icon: Mail }
     ],
     legal: [
       { label: 'Privacy Policy', href: 'https://github.com/pchandra191/gossip-ai?tab=readme-ov-file#privacy--security' },
@@ -49,8 +49,8 @@ export const Footer: React.FC = () => {
                 <p className="font-medium">Prabhat Chandra</p>
                 <p className="text-sm">Full Stack Developer & AI Enthusiast</p>
                 <div className="flex flex-col sm:flex-row sm:space-x-4 mt-2 text-sm">
-                  <a href="mailto:pchandra114@gmail.com" className="text-blue-600 dark:text-blue-400 hover:underline">
-                    pchandra114@gmail.com
+                  <a href="mailto:apcreations191@gmail.com" className="text-blue-600 dark:text-blue-400 hover:underline">
+                    apcreations191@gmail.com
                   </a>
                   <a href="https://github.com/pchandra191" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">
                     GitHub: @pchandra191

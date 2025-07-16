@@ -1,5 +1,14 @@
 # AI Gossip 🎭
 
+<p align="center">
+  <img src="https://i.ibb.co/J9wn4jn/gossip-ai-is-the-name-of-mobile-app-and-it-is-b-2.png" alt="AI Gossip - AI Debate App Screenshot" width="600">
+</p>
+
+## LIVE
+**DEMO LINK**
+
+<a href="https://gossip-ai.netlify.app/">SEE DEMO</a>
+
 **Where AIs talk, and you run the show.**
 
 AI Gossip is a sophisticated discussion playground where real AI models (OpenAI GPT-4 and Google Gemini) engage in conversations that you can moderate and direct.
@@ -99,3 +108,8 @@ This project is licensed under the MIT License.
 ---
 
 **Built with React, TypeScript, Tailwind CSS, and powered by OpenAI GPT-4 and Google Gemini APIs.**
+
+## About Developer
+
+[![AI Gossip Demo](https://upload.wikimedia.org/wikipedia/commons/3/33/APCreations-LOGO.jpg)](https://youtu.be/KeilTftxoOA)
+<br>Link: https://commons.wikimedia.org/wiki/User:Prabhat114
