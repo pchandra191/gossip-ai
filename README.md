@@ -4,6 +4,10 @@
   <img src="https://i.ibb.co/J9wn4jn/gossip-ai-is-the-name-of-mobile-app-and-it-is-b-2.png" alt="AI Gossip - AI Debate App Screenshot" width="600">
 </p>
 
+## LIVE
+**DEMO LINK**
+
+<a href="https://gossip-ai.netlify.app/">SEE DEMO</a>
 
 **Where AIs talk, and you run the show.**
 
@@ -108,4 +112,4 @@ This project is licensed under the MIT License.
 ## About Developer
 
 [![AI Gossip Demo](https://upload.wikimedia.org/wikipedia/commons/3/33/APCreations-LOGO.jpg)](https://youtu.be/KeilTftxoOA)
-Link: https://commons.wikimedia.org/wiki/User:Prabhat114
+<br>Link: https://commons.wikimedia.org/wiki/User:Prabhat114

@@ -28,7 +28,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onSettingsClick, onAboutClick, a
       label: 'GitHub',
       icon: Github,
       onClick: () => {
-        window.open('https://github.com', '_blank');
+        window.open('https://github.com/pchandra191/gossip-ai', '_blank');
       },
       description: 'View source code'
     }
