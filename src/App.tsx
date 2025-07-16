@@ -232,16 +232,7 @@ function App() {
         handleExportConversation();
         break;
       case 'refocus':
-        // Add a refocus instruction to the conversation
-        if (selectedPersonas[0] && selectedPersonas[1]) {
-          const refocusMessage: Message = {
-            id: Date.now().toString(),
-            personaId: selectedPersonas[0].id,
-            content: "Let me refocus our discussion on the main topic...",
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, refocusMessage]);
-        }
+        await handleRefocusConversation();
         break;
       case 'changeTopic':
         if (action.payload) {
@@ -249,29 +240,203 @@ function App() {
         }
         break;
       case 'summarize':
-        if (selectedPersonas[0]) {
-          const summaryMessage: Message = {
-            id: Date.now().toString(),
-            personaId: selectedPersonas[0].id,
-            content: "To summarize our discussion so far: we've covered the main points about " + currentTopic + " and explored different perspectives on this topic.",
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, summaryMessage]);
-        }
+        await handleSummarizeConversation();
         break;
       case 'clarify':
-        if (action.payload && selectedPersonas[1]) {
-          const clarifyMessage: Message = {
-            id: Date.now().toString(),
-            personaId: selectedPersonas[1].id,
-            content: `Good question! Let me clarify: ${action.payload}`,
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, clarifyMessage]);
+        if (action.payload) {
+          await handleClarifyQuestion(action.payload);
         }
         break;
       default:
         break;
+    }
+  };
+
+  const handleRefocusConversation = async () => {
+    if (!selectedPersonas[0] || messages.length === 0) return;
+    
+    setIsLoading(true);
+    
+    try {
+      const conversationHistory = messages.map(msg => ({
+        role: 'assistant' as const,
+        content: msg.content,
+        persona: msg.personaId
+      }));
+
+      const refocusPrompt = `Please refocus our discussion back to the main topic: "${currentTopic}". Acknowledge that we may have strayed and bring us back on track.`;
+      
+      let response: string;
+      
+      if (apiStatus.hasAnyKey) {
+        response = await generateAIResponse({
+          topic: currentTopic,
+          conversationHistory,
+          persona: selectedPersonas[0],
+          isResponse: true,
+          previousMessage: refocusPrompt
+        });
+      } else {
+        response = await generateMockAIResponse({
+          topic: currentTopic,
+          conversationHistory,
+          persona: selectedPersonas[0],
+          isResponse: true,
+          previousMessage: refocusPrompt
+        });
+      }
+      
+      const refocusMessage: Message = {
+        id: Date.now().toString(),
+        personaId: selectedPersonas[0].id,
+        content: response,
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, refocusMessage]);
+      setNextResponder(1); // Next response from second persona
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      console.error('Error refocusing conversation:', error);
+    }
+  };
+
+  const handleSummarizeConversation = async () => {
+    if (!selectedPersonas[0] || messages.length === 0) return;
+    
+    setIsLoading(true);
+    
+    try {
+      // Create a comprehensive summary of the conversation
+      const conversationText = messages.map((msg, index) => {
+        const persona = selectedPersonas.find(p => p?.id === msg.personaId);
+        return `${persona?.name || 'Unknown'}: ${msg.content}`;
+      }).join('\n\n');
+      
+      const summaryPrompt = `Please provide a comprehensive point-wise summary of our discussion about "${currentTopic}". 
+      
+Here's our conversation so far:
+${conversationText}
+
+Please summarize this in the following format:
+
+## Discussion Summary: ${currentTopic}
+
+### Key Points Discussed:
+• [Point 1]
+• [Point 2]
+• [Point 3]
+
+### Different Perspectives:
+• [Perspective 1]
+• [Perspective 2]
+
+### Main Arguments:
+• [Argument 1]
+• [Argument 2]
+
+### Conclusions/Insights:
+• [Insight 1]
+• [Insight 2]
+
+Keep it concise but comprehensive, focusing on the main ideas and different viewpoints presented.`;
+      
+      let response: string;
+      
+      if (apiStatus.hasAnyKey) {
+        response = await generateAIResponse({
+          topic: currentTopic,
+          conversationHistory: [],
+          persona: selectedPersonas[0],
+          isResponse: true,
+          previousMessage: summaryPrompt
+        });
+      } else {
+        // Mock summary for demo mode
+        response = `## Discussion Summary: ${currentTopic}
+
+### Key Points Discussed:
+• We explored different aspects of ${currentTopic}
+• Various perspectives were presented by both participants
+• The discussion covered both pros and cons of the topic
+
+### Different Perspectives:
+• ${selectedPersonas[0]?.name} emphasized ${selectedPersonas[0]?.traits[0]?.toLowerCase()} viewpoints
+• ${selectedPersonas[1]?.name} brought ${selectedPersonas[1]?.traits[0]?.toLowerCase()} insights
+
+### Main Arguments:
+• Strong evidence was presented for multiple sides
+• Logical reasoning was applied throughout the discussion
+
+### Conclusions/Insights:
+• The topic requires nuanced understanding
+• Multiple valid perspectives exist on this subject`;
+      }
+      
+      const summaryMessage: Message = {
+        id: Date.now().toString(),
+        personaId: selectedPersonas[0].id,
+        content: response,
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, summaryMessage]);
+      setNextResponder(1); // Next response from second persona
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      console.error('Error generating summary:', error);
+    }
+  };
+
+  const handleClarifyQuestion = async (question: string) => {
+    if (!selectedPersonas[1]) return;
+    
+    setIsLoading(true);
+    
+    try {
+      const conversationHistory = messages.map(msg => ({
+        role: 'assistant' as const,
+        content: msg.content,
+        persona: msg.personaId
+      }));
+
+      const clarifyPrompt = `The moderator is asking for clarification: "${question}". Please provide a clear and detailed explanation addressing this question in the context of our discussion about "${currentTopic}".`;
+      
+      let response: string;
+      
+      if (apiStatus.hasAnyKey) {
+        response = await generateAIResponse({
+          topic: currentTopic,
+          conversationHistory,
+          persona: selectedPersonas[1],
+          isResponse: true,
+          previousMessage: clarifyPrompt
+        });
+      } else {
+        response = await generateMockAIResponse({
+          topic: currentTopic,
+          conversationHistory,
+          persona: selectedPersonas[1],
+          isResponse: true,
+          previousMessage: `Clarification needed: ${question}`
+        });
+      }
+      
+      const clarifyMessage: Message = {
+        id: Date.now().toString(),
+        personaId: selectedPersonas[1].id,
+        content: response,
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, clarifyMessage]);
+      setNextResponder(0); // Next response from first persona
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      console.error('Error generating clarification:', error);
     }
   };
 
