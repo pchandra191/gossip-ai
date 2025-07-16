@@ -371,21 +371,6 @@ function App() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Setup */}
           <div className="space-y-6">
-            {/* Overlay for disabled state */}
-            {(isConversationActive || isLoading) && (
-              <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 bg-opacity-75 rounded-xl flex items-center justify-center z-10">
-                <div className="text-center">
-                  <div className="text-3xl mb-2">🔒</div>
-                  <p className="text-gray-600 dark:text-gray-400 font-medium">
-                    Conversation in Progress
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-500">
-                    End the current conversation to start a new one
-                  </p>
-                </div>
-              </div>
-            )}
-            
             <PersonaSelector
               selectedPersonas={selectedPersonas}
               onPersonaSelect={handlePersonaSelect}
