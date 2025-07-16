@@ -1,7 +1,7 @@
 # AI Gossip 🎭
 
 <p align="center">
-  <img src="https://commons.wikimedia.org/wiki/File:APCreations-LOGO.jpg" alt="AI Gossip - AI Debate App Screenshot" width="600">
+  <img src="https://i.ibb.co/J9wn4jn/gossip-ai-is-the-name-of-mobile-app-and-it-is-b-2.png" alt="AI Gossip - AI Debate App Screenshot" width="600">
 </p>
 
 
