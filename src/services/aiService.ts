@@ -104,7 +104,7 @@ const generateOpenAIResponse = async (context: ConversationContext): Promise<str
   }
 
   const completion = await client.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: 'gpt-4o-nano',
     messages,
     max_tokens: 150,
     temperature: 0.8,
