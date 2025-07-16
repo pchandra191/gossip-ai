@@ -107,4 +107,5 @@ This project is licensed under the MIT License.
 
 ## About Developer
 
-[![AI Gossip Demo](https://commons.wikimedia.org/wiki/File:APCreations-LOGO.jpg)](https://youtu.be/KeilTftxoOA)
+[![AI Gossip Demo](https://upload.wikimedia.org/wikipedia/commons/3/33/APCreations-LOGO.jpg)](https://youtu.be/KeilTftxoOA)
+Link: https://commons.wikimedia.org/wiki/User:Prabhat114
