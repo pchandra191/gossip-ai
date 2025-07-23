@@ -1,6 +1,7 @@
 import React from 'react';
 import { Logo } from './Logo';
 import { Github, Twitter, Mail, Heart, ExternalLink, Instagram, Linkedin, Facebook, Youtube } from 'lucide-react';
+import { GoogleAd } from './GoogleAd';
 
 export const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -129,6 +130,16 @@ export const Footer: React.FC = () => {
               ))}
             </ul>
           </div>
+        </div>
+
+        {/* Google Ad - Above Bottom Section */}
+        <div className="mt-8 mb-4">
+          <GoogleAd
+            client="ca-pub-XXXXXXXXXXXXXXXX"
+            slot="3456789012"
+            format="auto"
+            responsive={true}
+          />
         </div>
 
         {/* Bottom Section */}

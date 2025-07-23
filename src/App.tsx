@@ -11,6 +11,7 @@ import { generateAIResponse, validateApiKeys } from './services/aiService';
 import { generateMockAIResponse } from './utils/mockAI';
 import { Persona, Message, AppSettings, ModerationAction, Conversation, ApiStatus } from './types';
 import { Share2, Download } from 'lucide-react';
+import { GoogleAd } from './components/GoogleAd';
 
 function App() {
   const [selectedPersonas, setSelectedPersonas] = useState<[Persona | null, Persona | null]>([null, null]);
@@ -492,6 +493,16 @@ Keep it concise but comprehensive, focusing on the main ideas and different view
           </div>
         </div>
 
+        {/* Google Ad - Below Welcome Section */}
+        <div className="my-6">
+          <GoogleAd
+            client="ca-pub-XXXXXXXXXXXXXXXX"
+            slot="1234567890"
+            format="auto"
+            responsive={true}
+          />
+        </div>
+
         {/* Settings Panel */}
         {showSettings && (
           <div className="mb-8">
@@ -566,6 +577,16 @@ Keep it concise but comprehensive, focusing on the main ideas and different view
               darkMode={settings.darkMode}
             />
           </div>
+        </div>
+
+        {/* Google Ad - Between Main Content and Moderation Panel */}
+        <div className="my-6">
+          <GoogleAd
+            client="ca-pub-XXXXXXXXXXXXXXXX"
+            slot="2345678901"
+            format="horizontal"
+            responsive={true}
+          />
         </div>
 
         {/* Bottom Row - Moderation */}
