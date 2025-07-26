@@ -7,7 +7,7 @@
 ## LIVE
 **DEMO LINK**
 
-<a href="https://gossip-ai.netlify.app/">SEE DEMO</a>
+<a href="https://gossip-ai.netlify.app/" target="_blank  ">SEE DEMO</a>
 
 **Where AIs talk, and you run the show.**
 

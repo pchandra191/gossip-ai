@@ -1,11 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 
-// Extend Window interface to include adsbygoogle
 declare global {
   interface Window {
-    adsbygoogle: {
-      push: (params: Record<string, unknown>) => void;
-    }[];
+    adsbygoogle: any[];
   }
 }
 
@@ -18,7 +15,7 @@ interface GoogleAdProps {
   className?: string;
 }
 
-export const GoogleAd: React.FC<GoogleAdProps> = ({
+const GoogleAd: React.FC<GoogleAdProps> = ({
   client,
   slot,
   format = 'auto',
@@ -26,20 +23,47 @@ export const GoogleAd: React.FC<GoogleAdProps> = ({
   style = {},
   className = '',
 }) => {
+  const adRef = useRef<HTMLDivElement>(null);
+  const pushedRef = useRef(false); // Track if ad was already pushed
+
   useEffect(() => {
-    // Check if window and window.adsbygoogle are defined
-    if (typeof window !== 'undefined' && window.adsbygoogle) {
-      try {
-        // Push the ad to Google's ad service
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-      } catch (e) {
-        console.error('AdSense error:', e);
+    if (typeof window === 'undefined') return;
+
+    const existingScript = document.querySelector<HTMLScriptElement>(
+      `script[src*="pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${client}"]`
+    );
+
+    if (!existingScript) {
+      const script = document.createElement('script');
+      script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${client}`;
+      script.async = true;
+      script.crossOrigin = 'anonymous';
+      document.head.appendChild(script);
+
+      script.onload = () => {
+        if (!pushedRef.current) {
+          try {
+            (window.adsbygoogle = window.adsbygoogle || []).push({});
+            pushedRef.current = true;
+          } catch (e) {
+            console.error('AdSense push error (onload):', e);
+          }
+        }
+      };
+    } else {
+      if (!pushedRef.current) {
+        try {
+          (window.adsbygoogle = window.adsbygoogle || []).push({});
+          pushedRef.current = true;
+        } catch (e) {
+          console.error('AdSense push error:', e);
+        }
       }
     }
-  }, []);
+  }, [client]);
 
   return (
-    <div className={`google-ad ${className}`} style={{ overflow: 'hidden', ...style }}>
+    <div ref={adRef} className={`google-ad ${className}`} style={{ overflow: 'hidden', ...style }}>
       <ins
         className="adsbygoogle"
         style={{
@@ -56,3 +80,5 @@ export const GoogleAd: React.FC<GoogleAdProps> = ({
     </div>
   );
 };
+
+export default GoogleAd;

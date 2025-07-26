@@ -1,7 +1,9 @@
 import React from 'react';
 import { Logo } from './Logo';
 import { Github, Twitter, Mail, Heart, ExternalLink, Instagram, Linkedin, Facebook, Youtube } from 'lucide-react';
-import { GoogleAd } from './GoogleAd';
+import GoogleAd from './GoogleAd';
+import myImage from '../assets/pc-fast.gif';
+
 
 export const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -49,6 +51,7 @@ export const Footer: React.FC = () => {
             </p>
             <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
               <h4 className="font-semibold text-gray-800 dark:text-white mb-2">Developer</h4>
+                    <img src={myImage} alt="Description" width="100" />
               <div className="text-gray-600 dark:text-gray-300">
                 <p className="font-medium">Prabhat Chandra</p>
                 <p className="text-sm">Full Stack Developer & AI Enthusiast</p>
@@ -133,14 +136,16 @@ export const Footer: React.FC = () => {
         </div>
 
         {/* Google Ad - Above Bottom Section */}
-        <div className="mt-8 mb-4">
-          <GoogleAd
-            client="ca-pub-XXXXXXXXXXXXXXXX"
-            slot="3456789012"
-            format="auto"
-            responsive={true}
-          />
+        <div className="mt-8 mb-4 adsbygoogle">
+        <GoogleAd
+                client="ca-pub-5959832949642020"
+                slot="8400088323"
+                format="auto"
+                responsive={true}
+                style={{ minHeight: '100px', margin: '20px 0' }}
+              />
         </div>
+        
 
         {/* Bottom Section */}
         <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
