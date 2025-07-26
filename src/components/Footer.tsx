@@ -1,34 +1,38 @@
 import React from 'react';
 import { Logo } from './Logo';
-import { Github, Twitter, Mail, Heart, ExternalLink } from 'lucide-react';
+import { Github, Twitter, Mail, Heart, ExternalLink, Instagram, Linkedin, Facebook, Youtube } from 'lucide-react';
+import { GoogleAd } from './GoogleAd';
 
 export const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
 
   const footerLinks = {
     product: [
-      { label: 'Features', href: '#features' },
-      { label: 'Personas', href: '#personas' },
-      { label: 'API Status', href: '#api' },
-      { label: 'Demo', href: '#demo' }
+      { label: 'Features', href: 'https://github.com/pchandra191/gossip-ai/tree/dev?tab=readme-ov-file#moderation-tools' },
+      { label: 'Personas', href: 'https://github.com/pchandra191/gossip-ai/tree/dev?tab=readme-ov-file#available-personas' },
+      { label: 'API Status', href: 'https://github.com/pchandra191/gossip-ai/tree/dev?tab=readme-ov-file#demo-mode' },
+      { label: 'Demo', href: 'https://github.com/pchandra191/gossip-ai/tree/dev?tab=readme-ov-file#live' }
     ],
     resources: [
-      { label: 'Documentation', href: '#docs' },
-      { label: 'API Guide', href: '#api-guide' },
-      { label: 'Tutorials', href: '#tutorials' },
-      { label: 'FAQ', href: '#faq' }
+      { label: 'Documentation', href: 'https://github.com/pchandra191/gossip-ai/tree/dev?tab=readme-ov-file#getting-started ' },
+      { label: 'ChatGPT API Guide', href: 'https://github.com/pchandra191/gossip-ai/tree/dev?tab=readme-ov-file#getting-started' },
+      { label: 'Gemini API Guide', href: 'https://github.com/pchandra191/gossip-ai/tree/dev?tab=readme-ov-file#getting-started' },
+      { label: 'How to Use', href: 'https://github.com/pchandra191/gossip-ai/tree/dev?tab=readme-ov-file#getting-started' }
     ],
     community: [
-      { label: 'GitHub', href: 'https://github.com', icon: Github },
-      { label: 'Twitter', href: 'https://twitter.com', icon: Twitter },
-      { label: 'Discord', href: 'https://discord.com', icon: ExternalLink },
-      { label: 'Contact', href: 'mailto:hello@aigossip.com', icon: Mail }
+      { label: 'LinkedIn', href: 'https://www.linkedin.com/in/prabhatchandra114/', icon: Linkedin },
+      { label: 'GitHub', href: 'https://github.com/pchandra191', icon: Github },
+      { label: 'YouTube', href: 'https://www.youtube.com/191prabhat', icon: Youtube },
+      { label: 'Twitter', href: 'https://twitter.com/pchandra191', icon: Twitter },
+      { label: 'Instagram', href: 'https://instagram.com/pchandra191', icon: Instagram },
+      { label: 'facebook', href: ' https://www.facebook.com/prabhat191', icon: Facebook },
+      { label: 'Contact', href: 'mailto:apcreations191@gmail.com', icon: Mail }
     ],
     legal: [
-      { label: 'Privacy Policy', href: '#privacy' },
-      { label: 'Terms of Service', href: '#terms' },
-      { label: 'Cookie Policy', href: '#cookies' },
-      { label: 'License', href: '#license' }
+      { label: 'Privacy Policy', href: 'https://github.com/pchandra191/gossip-ai?tab=readme-ov-file#privacy--security' },
+      { label: 'Terms of Service', href: 'https://github.com/pchandra191/gossip-ai?tab=readme-ov-file#privacy--security' },
+      { label: 'Contributing', href: 'https://github.com/pchandra191/gossip-ai?tab=readme-ov-file#contributing' },
+      { label: 'License', href: 'https://opensource.org/license/mit' }
     ]
   };
 
@@ -43,6 +47,17 @@ export const Footer: React.FC = () => {
               Experience the future of AI conversations. Watch real AI models debate, 
               discuss, and explore ideas while you moderate and guide the discussion.
             </p>
+            <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <h4 className="font-semibold text-gray-800 dark:text-white mb-2">Developer</h4>
+              <div className="text-gray-600 dark:text-gray-300">
+                <p className="font-medium">Prabhat Chandra</p>
+                <p className="text-sm">Full Stack Developer & AI Enthusiast</p>
+                <div className="flex flex-col sm:flex-row sm:space-x-4 mt-2 text-sm">
+                  <a href="https://commons.wikimedia.org/wiki/User:Prabhat114" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">
+                    Wiki: @Prabhat114
+                  </a>
+                </div>
+              </div>
             <div className="mt-6 flex space-x-4">
               {footerLinks.community.map((link, index) => (
                 <a
@@ -57,6 +72,7 @@ export const Footer: React.FC = () => {
               ))}
             </div>
           </div>
+            </div>
 
           {/* Product Links */}
           <div>
@@ -116,11 +132,21 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
+        {/* Google Ad - Above Bottom Section */}
+        <div className="mt-8 mb-4">
+          <GoogleAd
+            client="ca-pub-XXXXXXXXXXXXXXXX"
+            slot="3456789012"
+            format="auto"
+            responsive={true}
+          />
+        </div>
+
         {/* Bottom Section */}
         <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-400">
-              <span>© {currentYear} AI Gossip. Made with</span>
+              <span>© {currentYear} aPCreations . Made with</span>
               <Heart size={16} className="text-red-500" />
               <span>for AI enthusiasts</span>
             </div>

@@ -18,8 +18,67 @@ export const generateMockAIResponse = async (options: ResponseOptions): Promise<
   // Simulate AI thinking time
   await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
   
+  // Handle special cases for moderation actions
+  if (previousMessage.includes('Please refocus our discussion')) {
+    return getRefocusResponse(persona, topic);
+  }
+  
+  if (previousMessage.includes('Please provide a comprehensive point-wise summary')) {
+    return getSummaryResponse(persona, topic, conversationHistory);
+  }
+  
+  if (previousMessage.includes('Clarification needed:')) {
+    const question = previousMessage.replace('Clarification needed:', '').trim();
+    return getClarificationResponse(persona, question, topic);
+  }
+  
   const responses = getResponsesByPersona(persona, topic, conversationHistory, isResponse, previousMessage);
   
+  return responses[Math.floor(Math.random() * responses.length)];
+};
+
+const getRefocusResponse = (persona: Persona, topic: string): string => {
+  const responses = [
+    `You're absolutely right, let me bring us back to the core of our discussion about ${topic}. I think we may have wandered a bit, so let me refocus on the main issue at hand.`,
+    `Good point about refocusing. Let's get back to the heart of ${topic} and what we were originally discussing. The main question we should be addressing is...`,
+    `Thanks for that reminder. Let me steer us back to the central theme of ${topic}. I believe the key aspect we should focus on is...`
+  ];
+  return responses[Math.floor(Math.random() * responses.length)];
+};
+
+const getSummaryResponse = (persona: Persona, topic: string, history: Array<{role: string; content: string; persona?: string}>): string => {
+  return `## Discussion Summary: ${topic}
+
+### Key Points Discussed:
+• We explored the fundamental aspects of ${topic}
+• Multiple perspectives were presented throughout our conversation
+• Both theoretical and practical implications were considered
+• The discussion covered various dimensions of the topic
+
+### Different Perspectives:
+• One viewpoint emphasized the ${persona.traits[0]?.toLowerCase()} approach to understanding ${topic}
+• Alternative perspectives highlighted different aspects and considerations
+• We examined both positive and negative implications
+
+### Main Arguments:
+• Strong evidence was presented supporting different positions
+• Logical reasoning was applied to evaluate various claims
+• Real-world examples were used to illustrate key points
+• Counter-arguments were addressed and discussed
+
+### Conclusions/Insights:
+• The topic requires nuanced understanding and careful consideration
+• Multiple valid perspectives exist and should be acknowledged
+• Further discussion could explore additional dimensions
+• The conversation revealed the complexity inherent in ${topic}`;
+};
+
+const getClarificationResponse = (persona: Persona, question: string, topic: string): string => {
+  const responses = [
+    `Great question! Let me clarify that point about ${topic}. When I mentioned that earlier, I was specifically referring to...`,
+    `I'm glad you asked for clarification on "${question}". In the context of our ${topic} discussion, what I meant was...`,
+    `That's an important clarification to make. Regarding "${question}" in relation to ${topic}, let me explain more clearly...`
+  ];
   return responses[Math.floor(Math.random() * responses.length)];
 };
 
