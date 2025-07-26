@@ -10,8 +10,8 @@ import { Footer } from './components/Footer';
 import { generateAIResponse, validateApiKeys } from './services/aiService';
 import { generateMockAIResponse } from './utils/mockAI';
 import { Persona, Message, AppSettings, ModerationAction, Conversation, ApiStatus } from './types';
-import { Share2, Download } from 'lucide-react';
-import { GoogleAd } from './components/GoogleAd';
+import GoogleAd from './components/GoogleAd';
+import myImage from './assets/pc-fast.gif';
 
 function App() {
   const [selectedPersonas, setSelectedPersonas] = useState<[Persona | null, Persona | null]>([null, null]);
@@ -455,53 +455,23 @@ Keep it concise but comprehensive, focusing on the main ideas and different view
         apiStatus={apiStatus} 
       />
       
-      <div className="container mx-auto px-4 py-8">
-        {/* Welcome Section */}
-        <div className="text-center mb-8">          
-          {/* Quick Start Guide */}
-          {!apiStatus.hasAnyKey && !isCheckingApi && (
-            <div className="max-w-2xl mx-auto mb-8 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-              <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200 mb-2">
-                🚀 Quick Start Guide
-              </h3>
-              <div className="text-sm text-blue-700 dark:text-blue-300 space-y-2">
-                <p><strong>Step 1:</strong> Choose two different debater personalities below</p>
-                <p><strong>Step 2:</strong> Enter a debate topic or select from suggestions</p>
-                <p><strong>Step 3:</strong> Watch the AI debate unfold!</p>
-                <p className="text-xs mt-3 opacity-75">
-                  Currently running in demo mode. For real AI responses, configure your OpenAI API key in the .env file.
-                </p>
-              </div>
-            </div>
-          )}
-          
-          <div className="flex justify-center mt-4 space-x-4">
-            <button
-              onClick={() => {/* Handle export */}}
-              disabled={messages.length === 0}
-              className="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow disabled:opacity-50"
-            >
-              <Download size={20} className="text-gray-600 dark:text-gray-400" />
-            </button>
-            <button
-              onClick={() => {/* Handle share */}}
-              disabled={messages.length === 0}
-              className="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow disabled:opacity-50"
-            >
-              <Share2 size={20} className="text-gray-600 dark:text-gray-400" />
-            </button>
+      {/* User Guide */}
+      <div className="container mx-auto px-4 pt-4">
+        <div className="max-w-4xl mx-auto p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">How to Use AI Gossip</h3>
+          <div className="text-sm text-gray-700 dark:text-gray-300 space-y-2">
+            <p><strong>1. Select Personas:</strong> Choose two distinct AI personalities from the left panel. These will be your debaters.</p>
+            <p><strong>2. Enter a Topic:</strong> Provide a topic for the AI models to discuss. You can also use suggested topics.</p>
+            <p><strong>3. Start the Debate:</strong> Click 'Start Debate' to initiate the conversation. The AI models will take turns responding.</p>
+            <p><strong>4. Moderate (Optional):</strong> Use the controls below the chat to pause, resume, refocus, or summarize the discussion.</p>
+            <p className="text-xs mt-3 opacity-75">
+              Tip: For real AI responses, ensure your OpenAI API key is configured in the `.env` file. Otherwise, the app runs in demo mode.
+            </p>
           </div>
         </div>
+      </div>
 
-        {/* Google Ad - Below Welcome Section */}
-        <div className="my-6">
-          <GoogleAd
-            client="ca-pub-XXXXXXXXXXXXXXXX"
-            slot="1234567890"
-            format="auto"
-            responsive={true}
-          />
-        </div>
+      <div className="container mx-auto px-4 py-8">
 
         {/* Settings Panel */}
         {showSettings && (
@@ -531,6 +501,7 @@ Keep it concise but comprehensive, focusing on the main ideas and different view
                 </ul>
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">Developer</h3>
                 <div className="text-gray-600 dark:text-gray-300">
+                    <img src={myImage} alt="Description" width="100" />
                   <p className="font-medium">Prabhat Chandra</p>
                   <p className="text-sm">Full Stack Developer & AI Enthusiast</p>
                   <div className="flex flex-col sm:flex-row sm:space-x-4 mt-2 text-sm">
@@ -544,7 +515,7 @@ Keep it concise but comprehensive, focusing on the main ideas and different view
           </div>
         )}
 
-        {/* Main Content */}
+          {/* Main Content - Setup and Live Discussion */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Setup */}
           <div className="space-y-6">
@@ -568,41 +539,44 @@ Keep it concise but comprehensive, focusing on the main ideas and different view
             />
           </div>
 
-          {/* Center Column - Chat */}
-          <div className="lg:col-span-2 relative">
-            <ChatInterface
-              messages={messages}
-              personas={selectedPersonas}
-              isLoading={isLoading}
-              darkMode={settings.darkMode}
-            />
+          {/* Right Column - Live Discussion (Chat + Moderation) */}
+          <div className="lg:col-span-2">
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Live Discussion</h2>
+            <div className="relative mb-8"> {/* Chat Interface */}
+              <ChatInterface
+                messages={messages}
+                personas={selectedPersonas}
+                isLoading={isLoading}
+                darkMode={settings.darkMode}
+              />
+            </div>
+            {/* Manual Conversation Control (Moderation Panel) */}
+            <div className="mt-8"> 
+              <ModerationPanel
+                onModerationAction={handleModerationAction}
+                onGetNextResponse={getNextResponse}
+                onEndConversation={handleEndConversation}
+                onStartNewConversation={handleStartNewConversation}
+                isActive={isConversationActive}
+                conversationEnded={conversationEnded}
+                messageCount={messages.length}
+                nextResponder={nextResponder}
+                personas={selectedPersonas}
+                isLoading={isLoading}
+                currentTopic={currentTopic}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Google Ad - Between Main Content and Moderation Panel */}
+        {/* Google Ad - After Main Content and Live Discussion */}
         <div className="my-6">
-          <GoogleAd
-            client="ca-pub-XXXXXXXXXXXXXXXX"
-            slot="2345678901"
-            format="horizontal"
+           <GoogleAd
+            client="ca-pub-5959832949642020"
+            slot="8400088323"
+            format="auto"
             responsive={true}
-          />
-        </div>
-
-        {/* Bottom Row - Moderation */}
-        <div className="mt-8">
-          <ModerationPanel
-            onModerationAction={handleModerationAction}
-            onGetNextResponse={getNextResponse}
-            onEndConversation={handleEndConversation}
-            onStartNewConversation={handleStartNewConversation}
-            isActive={isConversationActive}
-            conversationEnded={conversationEnded}
-            messageCount={messages.length}
-            nextResponder={nextResponder}
-            personas={selectedPersonas}
-            isLoading={isLoading}
-            currentTopic={currentTopic}
+            style={{ minHeight: '100px', margin: '20px 0' }}
           />
         </div>
       </div>
