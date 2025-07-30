@@ -138,7 +138,7 @@ export const Footer: React.FC = () => {
         {/* Google Ad - Above Bottom Section */}
         <div className="mt-8 mb-4 adsbygoogle">
         <GoogleAd
-                client="ca-pub-5959832949642020"
+                client="ca-pub-4366848715535129"
                 slot="8400088323"
                 format="auto"
                 responsive={true}

@@ -572,7 +572,7 @@ Keep it concise but comprehensive, focusing on the main ideas and different view
         {/* Google Ad - After Main Content and Live Discussion */}
         <div className="my-6">
            <GoogleAd
-            client="ca-pub-5959832949642020"
+            client="ca-pub-4366848715535129"
             slot="8400088323"
             format="auto"
             responsive={true}
